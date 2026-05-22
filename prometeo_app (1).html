@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prometeo CRM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0f0f5;--text2:#9090a8;--text3:#5a5a72;
+  --accent:#6c5ce7;--accent2:#a29bfe;
+  --green:#00b894;--amber:#fdcb6e;--red:#e17055;--blue:#74b9ff;
+  --radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;font-size:14px;}
+
+/* AUTH */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.auth-box{width:400px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:40px;}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo-icon{width:52px;height:52px;background:var(--accent);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px;}
+.auth-title{font-size:22px;font-weight:600;letter-spacing:-.5px;}
+.auth-sub{font-size:13px;color:var(--text3);margin-top:4px;}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:var(--radius-sm);padding:3px;margin-bottom:24px;}
+.auth-tab{flex:1;text-align:center;padding:7px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;}
+.auth-tab.active{background:var(--bg2);color:var(--text);}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:block;}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:13px;outline:none;width:100%;transition:border-color .15s;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all .15s;font-family:inherit;}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:white;}
+.btn-primary:hover{background:#5a4bd4;}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.msg-box{border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;}
+.msg-error{background:rgba(225,112,85,.15);color:var(--red);}
+.msg-success{background:rgba(0,184,148,.15);color:var(--green);}
+.auth-footer{text-align:center;margin-top:16px;font-size:12px;color:var(--text3);}
+.auth-link{color:var(--accent2);cursor:pointer;text-decoration:underline;}
+
+/* APP */
+#app-screen{display:none;height:100vh;overflow:hidden;flex-direction:column;}
+.topnav{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.topnav-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;}
+.topnav-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.topnav-sep{width:1px;height:20px;background:var(--border2);}
+.empresa-name{font-size:13px;color:var(--text2);}
+.topnav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.user-badge{font-size:12px;color:var(--text3);}
+.logout-btn{background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 10px;color:var(--text3);cursor:pointer;font-size:12px;font-family:inherit;}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.nav{padding:10px 8px;flex:1;}
+.nav-section{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:12px 10px 5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text2);font-size:13px;transition:all .12s;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(108,92,231,.15);color:var(--accent2);}
+.nav-item i{font-size:16px;}
+.nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:10px;padding:2px 6px;border-radius:20px;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.page-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg2);flex-shrink:0;}
+.page-title{font-size:14px;font-weight:500;flex:1;}
+.content{flex:1;overflow-y:auto;padding:20px 22px;}
+.section{display:none;}
+.section.active{display:block;}
+
+/* CARDS / METRICS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+.card-title{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.metric-value{font-size:26px;font-weight:300;letter-spacing:-1px;}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+/* TABLE */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg3);}
+.td-primary{color:var(--text);font-weight:500;}
+.empty-state{text-align:center;padding:40px;color:var(--text3);}
+.empty-state i{font-size:32px;display:block;margin-bottom:10px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-green{background:rgba(0,184,148,.15);color:var(--green);}
+.badge-amber{background:rgba(253,203,110,.15);color:var(--amber);}
+.badge-red{background:rgba(225,112,85,.15);color:var(--red);}
+.badge-blue{background:rgba(116,185,255,.15);color:var(--blue);}
+.badge-purple{background:rgba(108,92,231,.15);color:var(--accent2);}
+.avatar{width:30px;height:30px;border-radius:50%;background:rgba(108,92,231,.2);color:var(--accent2);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-full{grid-column:1/-1;}
+.form-gi{display:flex;flex-direction:column;gap:6px;}
+textarea{resize:vertical;min-height:80px;}
+.form-actions{display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.form-actions .btn{width:auto;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;width:580px;max-height:85vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-size:15px;font-weight:500;}
+.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1;padding:0;}
+
+/* TOGGLE */
+.toggle{width:34px;height:18px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;display:inline-block;}
+.toggle.on{background:var(--accent);border-color:var(--accent);}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;background:white;border-radius:50%;top:2px;left:2px;transition:left .2s;}
+.toggle.on::after{left:18px;}
+
+/* CHAT */
+.chat-layout{display:flex;height:calc(100vh - 110px);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.chat-list{width:250px;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);flex-shrink:0;}
+.chat-item{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.chat-item:hover,.chat-item.active{background:var(--bg3);}
+.chat-item-name{font-size:13px;font-weight:500;color:var(--text);}
+.chat-item-preview{font-size:11px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-item-time{font-size:10px;color:var(--text3);margin-top:3px;}
+.chat-main{flex:1;display:flex;flex-direction:column;background:var(--bg2);}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.msg{max-width:68%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.5;}
+.msg-in{background:var(--bg3);color:var(--text2);align-self:flex-start;border-bottom-left-radius:3px;}
+.msg-out{background:rgba(108,92,231,.18);color:var(--accent2);align-self:flex-end;border-bottom-right-radius:3px;}
+.msg-time{font-size:10px;color:var(--text3);margin-top:3px;}
+.chat-input{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.chat-input input{flex:1;}
+.loading{text-align:center;padding:30px;color:var(--text3);font-size:13px;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><i class="ti ti-bolt" style="color:white;font-size:22px"></i></div>
+      <div class="auth-title">Prometeo CRM</div>
+      <div class="auth-sub">Plataforma de bots inmobiliarios</div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Ingresar</div>
+      <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Crear cuenta</div>
+    </div>
+
+    <div id="auth-error" class="msg-box msg-error"></div>
+    <div id="auth-success" class="msg-box msg-success"></div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" id="login-btn">
+        <i class="ti ti-login"></i> Ingresar
+      </button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="form-register" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Nombre de tu empresa</label>
+        <input type="text" id="reg-empresa" placeholder="Inmobiliaria XYZ">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Repetir contraseña</label>
+        <input type="password" id="reg-pass2" placeholder="Repetí la contraseña">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()" id="register-btn">
+        <i class="ti ti-user-plus"></i> Crear cuenta
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" style="display:none;flex-direction:column;height:100vh">
+  <div class="topnav">
+    <div class="topnav-logo">
+      <div class="topnav-logo-icon"><i class="ti ti-bolt" style="color:white;font-size:14px"></i></div>
+      Prometeo
+    </div>
+    <div class="topnav-sep"></div>
+    <div class="empresa-name" id="empresa-display">—</div>
+    <div class="topnav-right">
+      <span class="user-badge" id="user-email-display"></span>
+      <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i> Salir</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="sidebar">
+      <div class="nav">
+        <div class="nav-section">General</div>
+        <div class="nav-item active" onclick="showSection('dashboard',this)"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+        <div class="nav-item" onclick="showSection('leads',this)"><i class="ti ti-users"></i> Leads <span class="nav-badge" id="badge-leads">0</span></div>
+        <div class="nav-item" onclick="showSection('conversaciones',this)"><i class="ti ti-message-2"></i> Conversaciones</div>
+        <div class="nav-item" onclick="showSection('citas',this)"><i class="ti ti-calendar"></i> Citas</div>
+        <div class="nav-section">Inmuebles</div>
+        <div class="nav-item" onclick="showSection('desarrollos',this)"><i class="ti ti-building"></i> Desarrollos</div>
+        <div class="nav-item" onclick="showSection('unidades',this)"><i class="ti ti-door"></i> Unidades</div>
+        <div class="nav-section">Configuración</div>
+        <div class="nav-item" onclick="showSection('empresa',this)"><i class="ti ti-settings"></i> Mi empresa</div>
+        <div class="nav-item" onclick="showSection('bot',this)"><i class="ti ti-robot"></i> Bot</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="page-header">
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div id="page-actions"></div>
+      </div>
+      <div class="content">
+
+        <!-- DASHBOARD -->
+        <div class="section active" id="sec-dashboard">
+          <div class="metrics">
+            <div class="metric"><div class="metric-label">Leads totales</div><div class="metric-value" id="m-total" style="color:var(--accent2)">—</div><div class="metric-sub">en tu cuenta</div></div>
+            <div class="metric"><div class="metric-label">Calientes</div><div class="metric-value" id="m-calientes" style="color:var(--red)">—</div><div class="metric-sub">listos para cerrar</div></div>
+            <div class="metric"><div class="metric-label">Tibios</div><div class="metric-value" id="m-tibios" style="color:var(--amber)">—</div><div class="metric-sub">en seguimiento</div></div>
+            <div class="metric"><div class="metric-label">Fríos</div><div class="metric-value" id="m-frios" style="color:var(--blue)">—</div><div class="metric-sub">inicio de contacto</div></div>
+          </div>
+          <div class="card"><div class="card-title">Últimos leads</div><div id="dashboard-leads-list"><div class="loading">Cargando...</div></div></div>
+        </div>
+
+        <!-- LEADS -->
+        <div class="section" id="sec-leads"><div id="leads-content"><div class="loading">Cargando...</div></div></div>
+
+        <!-- CONVERSACIONES -->
+        <div class="section" id="sec-conversaciones">
+          <div class="chat-layout">
+            <div class="chat-list" id="chat-list"><div class="loading">Cargando...</div></div>
+            <div class="chat-main">
+              <div class="chat-header" id="chat-header"><div style="color:var(--text3);font-size:13px">Seleccioná un lead</div></div>
+              <div class="chat-messages" id="chat-messages"></div>
+              <div class="chat-input" id="chat-input" style="display:none">
+                <input placeholder="Responder manualmente..." id="manual-msg">
+                <button class="btn btn-primary btn-sm"><i class="ti ti-send"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESARROLLOS -->
+        <div class="section" id="sec-desarrollos"><div id="desarrollos-content"><div class="loading">Cargando...</div></div></div>
+
+        <!-- UNIDADES -->
+        <div class="section" id="sec-unidades"><div id="unidades-content"><div class="loading">Cargando...</div></div></div>
+
+        <!-- CITAS -->
+        <div class="section" id="sec-citas"><div id="citas-content"><div class="loading">Cargando...</div></div></div>
+
+        <!-- EMPRESA -->
+        <div class="section" id="sec-empresa">
+          <div class="card">
+            <div class="card-title">Datos de la empresa</div>
+            <div class="form-grid">
+              <div class="form-gi form-full"><label class="form-label">Nombre de la empresa</label><input id="emp-nombre" placeholder="Inmobiliaria XYZ"></div>
+              <div class="form-gi"><label class="form-label">Email de contacto</label><input id="emp-email" placeholder="contacto@empresa.com"></div>
+              <div class="form-gi"><label class="form-label">Teléfono</label><input id="emp-telefono" placeholder="+54 11 xxxx-xxxx"></div>
+              <div class="form-gi"><label class="form-label">Ciudad</label><input id="emp-ciudad" placeholder="Buenos Aires"></div>
+              <div class="form-gi"><label class="form-label">País</label><input id="emp-pais" placeholder="Argentina"></div>
+              <div class="form-gi form-full"><label class="form-label">Sitio web</label><input id="emp-web" placeholder="https://www.empresa.com"></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" onclick="saveEmpresa()"><i class="ti ti-device-floppy"></i> Guardar</button></div>
+          </div>
+        </div>
+
+        <!-- BOT -->
+        <div class="section" id="sec-bot">
+          <div class="card">
+            <div class="card-title">Configuración del bot de Telegram</div>
+            <div class="form-grid">
+              <div class="form-gi form-full"><label class="form-label">Token de Telegram (BotFather)</label><input id="bot-token" type="password" placeholder="7234567890:AAFxxxxxxx"></div>
+              <div class="form-gi form-full"><label class="form-label">Username del bot</label><input id="bot-username" placeholder="@miempresa_bot"></div>
+              <div class="form-gi form-full"><label class="form-label">Mensaje de bienvenida</label><textarea id="bot-saludo" placeholder="¡Hola! Soy el asistente de [EMPRESA]..."></textarea></div>
+              <div class="form-gi form-full"><label class="form-label">Prompt del sistema</label><textarea id="bot-prompt" style="min-height:140px" placeholder="Sos el asistente de ventas de [EMPRESA]..."></textarea></div>
+              <div class="form-gi form-full" style="display:flex;align-items:center;gap:12px">
+                <div class="toggle on" id="bot-toggle" onclick="this.classList.toggle('on')"></div>
+                <div><div style="font-size:13px;font-weight:500">Bot activo</div><div style="font-size:11px;color:var(--text3)">El bot responde automáticamente</div></div>
+              </div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" onclick="saveBot()"><i class="ti ti-device-floppy"></i> Guardar configuración</button></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DESARROLLO -->
+<div class="modal-overlay" id="modal-desarrollo" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo desarrollo</div><button class="modal-close" onclick="document.getElementById('modal-desarrollo').style.display='none'">×</button></div>
+    <div class="form-grid">
+      <div class="form-gi form-full"><label class="form-label">Nombre</label><input id="d-nombre" placeholder="Torres del Sol"></div>
+      <div class="form-gi form-full"><label class="form-label">Descripción</label><textarea id="d-desc"></textarea></div>
+      <div class="form-gi"><label class="form-label">Tipo</label><select id="d-tipo"><option>Residencial</option><option>Comercial</option><option>Mixto</option><option>Oficinas</option></select></div>
+      <div class="form-gi"><label class="form-label">Estado</label><select id="d-estado"><option value="en_pozo">En pozo</option><option value="en_construccion">En construcción</option><option value="terminado">Terminado</option><option value="entregado">Entregado</option></select></div>
+      <div class="form-gi form-full"><label class="form-label">Dirección</label><input id="d-dir"></div>
+      <div class="form-gi"><label class="form-label">Barrio</label><input id="d-barrio" placeholder="Palermo"></div>
+      <div class="form-gi"><label class="form-label">Ciudad</label><input id="d-ciudad" placeholder="CABA"></div>
+      <div class="form-gi"><label class="form-label">Precio desde (USD)</label><input id="d-pmin" type="number"></div>
+      <div class="form-gi"><label class="form-label">Precio hasta (USD)</label><input id="d-pmax" type="number"></div>
+      <div class="form-gi"><label class="form-label">Entrega</label><input id="d-entrega" placeholder="Q2 2026"></div>
+      <div class="form-gi form-full"><label class="form-label">Amenities (separados por coma)</label><input id="d-amenities" placeholder="Pileta, Gym, SUM, Cochera"></div>
+      <div class="form-gi form-full"><label class="form-label">URL imagen principal</label><input id="d-imagen"></div>
+      <div class="form-gi form-full"><label class="form-label">URL brochure PDF</label><input id="d-brochure"></div>
+      <div class="form-gi form-full"><label class="form-label">URL video</label><input id="d-video"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="document.getElementById('modal-desarrollo').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDesarrollo()"><i class="ti ti-device-floppy"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL UNIDAD -->
+<div class="modal-overlay" id="modal-unidad" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nueva unidad</div><button class="modal-close" onclick="document.getElementById('modal-unidad').style.display='none'">×</button></div>
+    <div class="form-grid">
+      <div class="form-gi form-full"><label class="form-label">Desarrollo</label><select id="u-desarrollo"></select></div>
+      <div class="form-gi"><label class="form-label">Número / ID</label><input id="u-numero" placeholder="Piso 3 Dto A"></div>
+      <div class="form-gi"><label class="form-label">Tipo</label><select id="u-tipo"><option>Monoambiente</option><option>2 ambientes</option><option>3 ambientes</option><option>4 ambientes</option><option>PH</option><option>Local</option><option>Oficina</option></select></div>
+      <div class="form-gi"><label class="form-label">Superficie total (m²)</label><input id="u-stotal" type="number"></div>
+      <div class="form-gi"><label class="form-label">Superficie cubierta (m²)</label><input id="u-scub" type="number"></div>
+      <div class="form-gi"><label class="form-label">Dormitorios</label><input id="u-dorm" type="number"></div>
+      <div class="form-gi"><label class="form-label">Baños</label><input id="u-banos" type="number"></div>
+      <div class="form-gi"><label class="form-label">Cocheras</label><input id="u-coch" type="number"></div>
+      <div class="form-gi"><label class="form-label">Piso</label><input id="u-piso" type="number"></div>
+      <div class="form-gi"><label class="form-label">Orientación</label><select id="u-orient"><option>Norte</option><option>Sur</option><option>Este</option><option>Oeste</option><option>Frente</option><option>Contrafrente</option></select></div>
+      <div class="form-gi"><label class="form-label">Precio (USD)</label><input id="u-precio" type="number"></div>
+      <div class="form-gi"><label class="form-label">Expensas (ARS)</label><input id="u-exp" type="number"></div>
+      <div class="form-gi form-full"><label class="form-label">Disponibilidad</label><select id="u-disp"><option value="disponible">Disponible</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="document.getElementById('modal-unidad').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUnidad()"><i class="ti ti-device-floppy"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://iclwvbckgkgpyxxyzfjw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_KOGorlokri-LFb9kpoLqcA_E8mEmnu1';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let currentEmpresa = null;
+
+// ── AUTH ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('form-login').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  hideMessages();
+}
+
+function showMsg(type, msg) {
+  hideMessages();
+  const el = document.getElementById('auth-'+type);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideMessages() {
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email || !pass) { showMsg('error','Completá todos los campos'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.innerHTML = '<i class="ti ti-loader"></i> Ingresando...';
+  btn.disabled = true;
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    showMsg('error', 'Email o contraseña incorrectos');
+    btn.innerHTML = '<i class="ti ti-login"></i> Ingresar';
+    btn.disabled = false;
+    return;
+  }
+  currentUser = data.user;
+  document.getElementById('user-email-display').textContent = email;
+  await loadEmpresa();
+  showApp();
+}
+
+async function doRegister() {
+  const empresa = document.getElementById('reg-empresa').value.trim();
+  const email   = document.getElementById('reg-email').value.trim();
+  const pass    = document.getElementById('reg-pass').value;
+  const pass2   = document.getElementById('reg-pass2').value;
+
+  if (!empresa || !email || !pass || !pass2) { showMsg('error','Completá todos los campos'); return; }
+  if (pass !== pass2) { showMsg('error','Las contraseñas no coinciden'); return; }
+  if (pass.length < 6) { showMsg('error','La contraseña debe tener al menos 6 caracteres'); return; }
+
+  const btn = document.getElementById('register-btn');
+  btn.innerHTML = '<i class="ti ti-loader"></i> Creando cuenta...';
+  btn.disabled = true;
+
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) {
+    showMsg('error', error.message);
+    btn.innerHTML = '<i class="ti ti-user-plus"></i> Crear cuenta';
+    btn.disabled = false;
+    return;
+  }
+
+  currentUser = data.user;
+
+  const { error: e2 } = await sb.rpc('crear_cuenta_empresa', {
+    p_user_id: currentUser.id,
+    p_email:   email,
+    p_empresa: empresa
+  });
+
+  if (e2) {
+    showMsg('error', 'Error al crear la cuenta: ' + e2.message);
+    btn.innerHTML = '<i class="ti ti-user-plus"></i> Crear cuenta';
+    btn.disabled = false;
+    return;
+  }
+
+  document.getElementById('user-email-display').textContent = email;
+  await loadEmpresa();
+  showApp();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  currentUser = null; currentEmpresa = null;
+}
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('user-email-display').textContent = session.user.email;
+    await loadEmpresa();
+    showApp();
+  }
+}
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  const app = document.getElementById('app-screen');
+  app.style.display = 'flex';
+  loadDashboard();
+}
+
+// ── EMPRESA ──────────────────────────────────────────
+async function loadEmpresa() {
+  const { data: perfil } = await sb.from('perfiles').select('cuenta_id').eq('id', currentUser.id).single();
+  if (!perfil) return;
+  const { data: emp } = await sb.from('empresas').select('*').eq('cuenta_id', perfil.cuenta_id).single();
+  if (!emp) return;
+  currentEmpresa = emp;
+  document.getElementById('empresa-display').textContent = emp.nombre;
+  document.getElementById('emp-nombre').value   = emp.nombre||'';
+  document.getElementById('emp-email').value    = emp.email_contacto||'';
+  document.getElementById('emp-telefono').value = emp.telefono||'';
+  document.getElementById('emp-ciudad').value   = emp.ciudad||'';
+  document.getElementById('emp-pais').value     = emp.pais||'';
+  document.getElementById('emp-web').value      = emp.sitio_web||'';
+  document.getElementById('bot-token').value    = emp.bot_token||'';
+  document.getElementById('bot-username').value = emp.bot_username||'';
+  document.getElementById('bot-prompt').value   = emp.prompt_sistema||'';
+  document.getElementById('bot-saludo').value   = emp.prompt_saludo||'';
+  if (!emp.bot_activo) document.getElementById('bot-toggle').classList.remove('on');
+}
+
+async function saveEmpresa() {
+  if (!currentEmpresa) return;
+  await sb.from('empresas').update({
+    nombre: document.getElementById('emp-nombre').value,
+    email_contacto: document.getElementById('emp-email').value,
+    telefono: document.getElementById('emp-telefono').value,
+    ciudad: document.getElementById('emp-ciudad').value,
+    pais: document.getElementById('emp-pais').value,
+    sitio_web: document.getElementById('emp-web').value,
+    updated_at: new Date().toISOString()
+  }).eq('id', currentEmpresa.id);
+  document.getElementById('empresa-display').textContent = document.getElementById('emp-nombre').value;
+  alert('✓ Empresa guardada');
+}
+
+async function saveBot() {
+  if (!currentEmpresa) return;
+  await sb.from('empresas').update({
+    bot_token: document.getElementById('bot-token').value,
+    bot_username: document.getElementById('bot-username').value,
+    prompt_sistema: document.getElementById('bot-prompt').value,
+    prompt_saludo: document.getElementById('bot-saludo').value,
+    bot_activo: document.getElementById('bot-toggle').classList.contains('on'),
+    updated_at: new Date().toISOString()
+  }).eq('id', currentEmpresa.id);
+  alert('✓ Bot guardado');
+}
+
+// ── DASHBOARD ────────────────────────────────────────
+async function loadDashboard() {
+  if (!currentEmpresa) return;
+  const { data: leads } = await sb.from('leads').select('temperatura').eq('empresa_id', currentEmpresa.id);
+  if (!leads) return;
+  const total = leads.length;
+  document.getElementById('m-total').textContent     = total;
+  document.getElementById('m-calientes').textContent = leads.filter(l=>l.temperatura==='caliente').length;
+  document.getElementById('m-tibios').textContent    = leads.filter(l=>l.temperatura==='tibio').length;
+  document.getElementById('m-frios').textContent     = leads.filter(l=>l.temperatura==='frio').length;
+  document.getElementById('badge-leads').textContent = total;
+
+  const { data: rec } = await sb.from('leads').select('*').eq('empresa_id', currentEmpresa.id).order('created_at',{ascending:false}).limit(5);
+  const list = document.getElementById('dashboard-leads-list');
+  if (!rec||rec.length===0) { list.innerHTML='<div class="empty-state"><i class="ti ti-users"></i><p>Aún no hay leads.</p></div>'; return; }
+  list.innerHTML = rec.map(l=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div class="avatar">${(l.nombre||l.contacto||'?').substring(0,2).toUpperCase()}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${l.nombre||l.contacto}</div><div style="font-size:11px;color:var(--text3)">${l.canal} · ${new Date(l.created_at).toLocaleDateString('es-AR')}</div></div>
+      <span class="badge ${l.temperatura==='caliente'?'badge-red':l.temperatura==='tibio'?'badge-amber':'badge-blue'}">${l.temperatura||'—'}</span>
+    </div>`).join('');
+}
+
+// ── LEADS ────────────────────────────────────────────
+async function loadLeads() {
+  if (!currentEmpresa) return;
+  const { data } = await sb.from('leads').select('*').eq('empresa_id', currentEmpresa.id).order('created_at',{ascending:false});
+  const el = document.getElementById('leads-content');
+  if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-users"></i><p>No hay leads todavía.</p></div>'; return; }
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Contacto</th><th>Canal</th><th>Temperatura</th><th>Intención</th><th>Presupuesto</th><th>Fecha</th></tr></thead><tbody>${
+    data.map(l=>`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${(l.nombre||l.contacto||'?').substring(0,2).toUpperCase()}</div><div><div class="td-primary">${l.nombre||'—'}</div><div style="font-size:11px;color:var(--text3)">${l.contacto}</div></div></div></td>
+      <td><span class="badge badge-blue">${l.canal}</span></td>
+      <td><span class="badge ${l.temperatura==='caliente'?'badge-red':l.temperatura==='tibio'?'badge-amber':'badge-blue'}">${l.temperatura||'—'}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.intencion||'—'}</td>
+      <td>${l.presupuesto_max?'USD '+Number(l.presupuesto_max).toLocaleString():'—'}</td>
+      <td>${new Date(l.created_at).toLocaleDateString('es-AR')}</td>
+    </tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+// ── CONVERSACIONES ───────────────────────────────────
+async function loadConversaciones() {
+  if (!currentEmpresa) return;
+  const { data: leads } = await sb.from('leads').select('*').eq('empresa_id', currentEmpresa.id).order('updated_at',{ascending:false});
+  const list = document.getElementById('chat-list');
+  if (!leads||leads.length===0) { list.innerHTML='<div class="loading">Sin conversaciones</div>'; return; }
+  list.innerHTML = leads.map(l=>`
+    <div class="chat-item" onclick="loadMensajes('${l.id}','${(l.nombre||l.contacto).replace(/'/g,"\\'")}',this)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="avatar" style="width:26px;height:26px;font-size:9px">${(l.nombre||l.contacto||'?').substring(0,2).toUpperCase()}</div>
+        <div class="chat-item-name" style="flex:1">${l.nombre||l.contacto}</div>
+        <span class="badge ${l.temperatura==='caliente'?'badge-red':l.temperatura==='tibio'?'badge-amber':'badge-blue'}" style="font-size:10px;padding:2px 6px">${l.temperatura||'?'}</span>
+      </div>
+      <div class="chat-item-preview">${l.intencion||'Sin intención detectada'}</div>
+      <div class="chat-item-time">${l.canal} · ${new Date(l.updated_at||l.created_at).toLocaleDateString('es-AR')}</div>
+    </div>`).join('');
+}
+
+async function loadMensajes(leadId, nombre, el) {
+  document.querySelectorAll('.chat-item').forEach(i=>i.classList.remove('active'));
+  el?.classList.add('active');
+  document.getElementById('chat-header').innerHTML=`
+    <div class="avatar">${nombre.substring(0,2).toUpperCase()}</div>
+    <div><div style="font-size:13px;font-weight:500">${nombre}</div></div>
+    <button class="btn btn-sm" style="margin-left:auto" onclick="toggleBot('${leadId}')"><i class="ti ti-user-check"></i> Tomar control</button>`;
+  document.getElementById('chat-input').style.display='flex';
+  const { data: msgs } = await sb.from('mensajes').select('*').eq('lead_id', leadId).order('created_at',{ascending:true});
+  const msgsEl = document.getElementById('chat-messages');
+  if (!msgs||msgs.length===0) { msgsEl.innerHTML='<div class="loading">Sin mensajes aún</div>'; return; }
+  msgsEl.innerHTML = msgs.map(m=>`
+    <div class="msg ${m.direccion==='entrante'?'msg-in':'msg-out'}">
+      ${m.contenido}
+      <div class="msg-time">${new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}${m.direccion==='saliente'?' · Bot':''}</div>
+    </div>`).join('');
+  msgsEl.scrollTop=msgsEl.scrollHeight;
+}
+
+async function toggleBot(leadId) {
+  const { data: lead } = await sb.from('leads').select('bot_pausado').eq('id',leadId).single();
+  if (!lead) return;
+  await sb.from('leads').update({bot_pausado:!lead.bot_pausado}).eq('id',leadId);
+  alert(lead.bot_pausado?'✓ Bot reactivado':'✓ Bot pausado — podés responder manualmente');
+}
+
+// ── DESARROLLOS ──────────────────────────────────────
+async function loadDesarrollos() {
+  if (!currentEmpresa) return;
+  document.getElementById('page-actions').innerHTML=`<button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-desarrollo').style.display='flex'"><i class="ti ti-plus"></i> Nuevo desarrollo</button>`;
+  const { data } = await sb.from('desarrollos').select('*').eq('empresa_id', currentEmpresa.id).order('created_at',{ascending:false});
+  const el = document.getElementById('desarrollos-content');
+  if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i><p>No hay desarrollos cargados.</p></div>'; return; }
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Barrio</th><th>Tipo</th><th>Estado</th><th>Precio desde</th><th>Entrega</th></tr></thead><tbody>${
+    data.map(d=>`<tr><td class="td-primary">${d.nombre}</td><td>${d.barrio||'—'}, ${d.ciudad||''}</td><td>${d.tipo||'—'}</td><td><span class="badge ${d.estado==='terminado'?'badge-green':d.estado==='en_construccion'?'badge-amber':'badge-blue'}">${d.estado||'—'}</span></td><td>${d.precio_desde?'USD '+Number(d.precio_desde).toLocaleString():'—'}</td><td>${d.entrega||'—'}</td></tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+async function saveDesarrollo() {
+  if (!currentEmpresa) return;
+  const amenities = document.getElementById('d-amenities').value.split(',').map(a=>a.trim()).filter(Boolean);
+  const { error } = await sb.from('desarrollos').insert({
+    empresa_id: currentEmpresa.id,
+    nombre: document.getElementById('d-nombre').value,
+    descripcion: document.getElementById('d-desc').value,
+    tipo: document.getElementById('d-tipo').value,
+    estado: document.getElementById('d-estado').value,
+    direccion: document.getElementById('d-dir').value,
+    barrio: document.getElementById('d-barrio').value,
+    ciudad: document.getElementById('d-ciudad').value,
+    precio_desde: parseFloat(document.getElementById('d-pmin').value)||null,
+    precio_hasta: parseFloat(document.getElementById('d-pmax').value)||null,
+    entrega: document.getElementById('d-entrega').value,
+    amenities,
+    imagen_principal: document.getElementById('d-imagen').value,
+    brochure_url: document.getElementById('d-brochure').value,
+    video_url: document.getElementById('d-video').value,
+    activo: true
+  });
+  if (!error) { document.getElementById('modal-desarrollo').style.display='none'; loadDesarrollos(); alert('✓ Desarrollo guardado'); }
+  else alert('Error: '+error.message);
+}
+
+// ── UNIDADES ─────────────────────────────────────────
+async function loadUnidades() {
+  if (!currentEmpresa) return;
+  document.getElementById('page-actions').innerHTML=`<button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-unidad').style.display='flex'"><i class="ti ti-plus"></i> Nueva unidad</button>`;
+  const { data: devs } = await sb.from('desarrollos').select('id,nombre').eq('empresa_id', currentEmpresa.id);
+  const sel = document.getElementById('u-desarrollo');
+  sel.innerHTML = (devs||[]).map(d=>`<option value="${d.id}">${d.nombre}</option>`).join('');
+  if (!devs||devs.length===0) { document.getElementById('unidades-content').innerHTML='<div class="empty-state"><i class="ti ti-building"></i><p>Primero cargá un desarrollo.</p></div>'; return; }
+  const { data } = await sb.from('unidades').select('*, desarrollos(nombre)').in('desarrollo_id', devs.map(d=>d.id)).order('created_at',{ascending:false});
+  const el = document.getElementById('unidades-content');
+  if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-door"></i><p>No hay unidades cargadas.</p></div>'; return; }
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Unidad</th><th>Desarrollo</th><th>Tipo</th><th>Sup.</th><th>Dorm.</th><th>Precio</th><th>Estado</th></tr></thead><tbody>${
+    data.map(u=>`<tr><td class="td-primary">${u.numero||'—'}</td><td>${u.desarrollos?.nombre||'—'}</td><td>${u.tipo||'—'}</td><td>${u.superficie_total?u.superficie_total+' m²':'—'}</td><td>${u.dormitorios||'—'}</td><td>${u.precio?'USD '+Number(u.precio).toLocaleString():'—'}</td><td><span class="badge ${u.disponibilidad==='disponible'?'badge-green':u.disponibilidad==='reservado'?'badge-amber':'badge-red'}">${u.disponibilidad||'—'}</span></td></tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+async function saveUnidad() {
+  const { error } = await sb.from('unidades').insert({
+    desarrollo_id: document.getElementById('u-desarrollo').value,
+    numero: document.getElementById('u-numero').value,
+    tipo: document.getElementById('u-tipo').value,
+    superficie_total: parseFloat(document.getElementById('u-stotal').value)||null,
+    superficie_cubierta: parseFloat(document.getElementById('u-scub').value)||null,
+    dormitorios: parseInt(document.getElementById('u-dorm').value)||null,
+    banos: parseInt(document.getElementById('u-banos').value)||null,
+    cocheras: parseInt(document.getElementById('u-coch').value)||0,
+    piso: parseInt(document.getElementById('u-piso').value)||null,
+    orientacion: document.getElementById('u-orient').value,
+    precio: parseFloat(document.getElementById('u-precio').value)||null,
+    expensas: parseFloat(document.getElementById('u-exp').value)||null,
+    disponibilidad: document.getElementById('u-disp').value,
+    activo: true
+  });
+  if (!error) { document.getElementById('modal-unidad').style.display='none'; loadUnidades(); alert('✓ Unidad guardada'); }
+  else alert('Error: '+error.message);
+}
+
+// ── CITAS ────────────────────────────────────────────
+async function loadCitas() {
+  if (!currentEmpresa) return;
+  const { data } = await sb.from('citas').select('*, leads(nombre,contacto)').eq('empresa_id', currentEmpresa.id).order('fecha_inicio',{ascending:true});
+  const el = document.getElementById('citas-content');
+  if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-calendar"></i><p>No hay citas agendadas.</p></div>'; return; }
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Lead</th><th>Fecha</th><th>Título</th><th>Estado</th><th>Link</th></tr></thead><tbody>${
+    data.map(c=>`<tr><td class="td-primary">${c.leads?.nombre||c.leads?.contacto||'—'}</td><td>${new Date(c.fecha_inicio).toLocaleString('es-AR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td>${c.titulo||'—'}</td><td><span class="badge ${c.estado==='programada'?'badge-green':'badge-red'}">${c.estado}</span></td><td>${c.meet_link?`<a href="${c.meet_link}" target="_blank" style="color:var(--accent2)">Abrir</a>`:'—'}</td></tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+// ── NAVEGACIÓN ───────────────────────────────────────
+const pageTitles={dashboard:'Dashboard',leads:'Leads',conversaciones:'Conversaciones',citas:'Citas',desarrollos:'Desarrollos',unidades:'Unidades',empresa:'Mi empresa',bot:'Bot'};
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el?.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id]||id;
+  document.getElementById('page-actions').innerHTML = '';
+  if(id==='leads') loadLeads();
+  if(id==='conversaciones') loadConversaciones();
+  if(id==='desarrollos') loadDesarrollos();
+  if(id==='unidades') loadUnidades();
+  if(id==='citas') loadCitas();
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('reg-pass2').addEventListener('keydown', e=>{ if(e.key==='Enter') doRegister(); });
+checkSession();
+</script>
+</body>
+</html>
