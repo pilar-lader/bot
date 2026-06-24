@@ -16,11 +16,11 @@
   --radius:12px;--radius-sm:8px;
 }
 [data-theme="light"] {
-  --bg:#f0f0f5;--bg2:#ffffff;--bg3:#f5f5fa;
-  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --bg:#f0f2f5;--bg2:#ffffff;--bg3:#f0f2f5;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
   --text:#1a1a2e;--text2:#4a4a6a;--text3:#8888a8;
   --accent:#6c5ce7;--accent2:#5a4bd4;
-  --green:#00976e;--amber:#c99a00;--red:#c0502e;--blue:#2980d4;
+  --green:#00976e;--amber:#b88a00;--red:#c0502e;--blue:#2472c8;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;font-size:14px;}
@@ -230,9 +230,7 @@ textarea{resize:vertical;min-height:80px;}
     <div class="empresa-name" id="empresa-display">—</div>
     <div class="topnav-right">
       <span class="user-badge" id="user-email-display"></span>
-      <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar modo" style="background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 8px;color:var(--text3);cursor:pointer;font-size:14px;font-family:inherit;display:flex;align-items:center;">
-        <i class="ti ti-sun" id="icon-sun"></i><i class="ti ti-moon" id="icon-moon" style="display:none"></i>
-      </button>
+      <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar modo" style="background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 9px;color:var(--text2);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;"><i class="ti ti-moon" id="icon-moon"></i><i class="ti ti-sun" id="icon-sun" style="display:none"></i></button>
       <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i> Salir</button>
     </div>
   </div>
@@ -263,7 +261,7 @@ textarea{resize:vertical;min-height:80px;}
         <div class="section active" id="sec-dashboard">
           <div class="metrics">
             <div class="metric"><div class="metric-label">Leads totales</div><div class="metric-value" id="m-total" style="color:var(--accent2)">—</div><div class="metric-sub">en tu cuenta</div></div>
-            </div>
+          </div>
           <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
             <div class="metric"><div class="metric-label">Nuevos (7 días)</div><div class="metric-value" id="m-nuevos7d" style="color:var(--green)">—</div><div class="metric-sub">esta semana</div></div>
             <div class="metric"><div class="metric-label">Nuevos (30 días)</div><div class="metric-value" id="m-nuevos30d" style="color:var(--green)">—</div><div class="metric-sub">este mes</div></div>
@@ -441,7 +439,6 @@ textarea{resize:vertical;min-height:80px;}
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
-
 
 
 <script>
@@ -664,7 +661,8 @@ async function loadLeads() {
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Contacto</th><th>Canal</th><th>Intención</th><th>Presupuesto</th><th>Fecha</th></tr></thead><tbody>${
     data.map(l=>`<tr>
       <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${(l.nombre||l.contacto||'?').substring(0,2).toUpperCase()}</div><div><div class="td-primary">${l.nombre||'—'}</div><div style="font-size:11px;color:var(--text3)">${l.contacto}</div></div></div></td>
-      <td><span class="badge badge-blue">${l.canal}</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.intencion||'—'}</td>
+      <td><span class="badge badge-blue">${l.canal}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.intencion||'—'}</td>
       <td>${l.presupuesto_max?'USD '+Number(l.presupuesto_max).toLocaleString():'—'}</td>
       <td>${new Date(l.created_at).toLocaleDateString('es-AR')}</td>
     </tr>`).join('')
@@ -716,6 +714,8 @@ async function toggleBot(leadId) {
   showToast(lead.bot_pausado ? 'Bot reactivado — el bot responde automaticamente' : 'Bot pausado — podés responder manualmente');
 }
 
+
+
 // ── CITAS ────────────────────────────────────────────
 async function loadCitas() {
   if (!currentEmpresa) return;
@@ -728,7 +728,7 @@ async function loadCitas() {
 }
 
 // ── NAVEGACIÓN ───────────────────────────────────────
-const pageTitles={dashboard:'Dashboard',leads:'Leads',conversaciones:'Conversaciones',citas:'Citas',empresa:'Mi empresa',bot:'Bot'};
+const pageTitles={dashboard:'Dashboard',leads:'Leads',conversaciones:'Conversaciones',citas:'Citas',empresa:'Mi empresa',bot:'Bot',canales:'Canales'};
 // ── WHATSAPP QR ───────────────────────────────────────
 const BAILEYS_URL = 'https://baileys-qr-production.up.railway.app';
 let qrPollInterval = null;
@@ -856,27 +856,27 @@ async function enviarManual() {
   });
 }
 
-// ── TEMA CLARO / OSCURO ───────────────────────────────
+
+// ── TEMA CLARO / OSCURO ──────────────────────────────
 const THEME_KEY = 'prometeo-theme';
 function applyTheme(light) {
   document.documentElement.setAttribute('data-theme', light ? 'light' : '');
-  document.getElementById('icon-sun').style.display  = light ? 'none' : '';
-  document.getElementById('icon-moon').style.display = light ? ''     : 'none';
-  document.getElementById('theme-toggle').title = light ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro';
+  document.getElementById('icon-moon').style.display = light ? 'none' : '';
+  document.getElementById('icon-sun').style.display  = light ? ''     : 'none';
+  document.getElementById('theme-toggle').title = light ? 'Modo oscuro' : 'Modo claro';
 }
 function toggleTheme() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  const next = !isLight;
-  localStorage.setItem(THEME_KEY, next ? 'light' : 'dark');
-  applyTheme(next);
+  localStorage.setItem(THEME_KEY, isLight ? 'dark' : 'light');
+  applyTheme(!isLight);
 }
-(function initTheme() {
+(function() {
   const saved = localStorage.getItem(THEME_KEY);
-  const preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-  applyTheme(saved === 'light' || (!saved && preferLight));
+  const sysLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved === 'light' || (!saved && sysLight));
 })();
 
-// ── ENVÍO MANUAL ─────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────
 document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 document.getElementById('reg-pass2').addEventListener('keydown', e=>{ if(e.key==='Enter') doRegister(); });
 checkSession();
