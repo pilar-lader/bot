@@ -245,9 +245,6 @@ textarea{resize:vertical;min-height:80px;}
         <div class="nav-item" onclick="showSection('leads',this)"><i class="ti ti-users"></i> Leads <span class="nav-badge" id="badge-leads">0</span></div>
         <div class="nav-item" onclick="showSection('conversaciones',this)"><i class="ti ti-message-2"></i> Conversaciones</div>
         <div class="nav-item" onclick="showSection('citas',this)"><i class="ti ti-calendar"></i> Citas</div>
-        <div class="nav-section">Inmuebles</div>
-        <div class="nav-item" onclick="showSection('desarrollos',this)"><i class="ti ti-building"></i> Desarrollos</div>
-        <div class="nav-item" onclick="showSection('unidades',this)"><i class="ti ti-door"></i> Unidades</div>
         <div class="nav-section">Configuración</div>
         <div class="nav-item" onclick="showSection('empresa',this)"><i class="ti ti-settings"></i> Mi empresa</div>
         <div class="nav-item" onclick="showSection('bot',this)"><i class="ti ti-robot"></i> Bot</div>
@@ -266,10 +263,7 @@ textarea{resize:vertical;min-height:80px;}
         <div class="section active" id="sec-dashboard">
           <div class="metrics">
             <div class="metric"><div class="metric-label">Leads totales</div><div class="metric-value" id="m-total" style="color:var(--accent2)">—</div><div class="metric-sub">en tu cuenta</div></div>
-            <div class="metric"><div class="metric-label">Calientes 🔥</div><div class="metric-value" id="m-calientes" style="color:var(--red)">—</div><div class="metric-sub">listos para cerrar</div></div>
-            <div class="metric"><div class="metric-label">Tibios</div><div class="metric-value" id="m-tibios" style="color:var(--amber)">—</div><div class="metric-sub">en seguimiento</div></div>
-            <div class="metric"><div class="metric-label">Fríos</div><div class="metric-value" id="m-frios" style="color:var(--blue)">—</div><div class="metric-sub">inicio de contacto</div></div>
-          </div>
+            </div>
           <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
             <div class="metric"><div class="metric-label">Nuevos (7 días)</div><div class="metric-value" id="m-nuevos7d" style="color:var(--green)">—</div><div class="metric-sub">esta semana</div></div>
             <div class="metric"><div class="metric-label">Nuevos (30 días)</div><div class="metric-value" id="m-nuevos30d" style="color:var(--green)">—</div><div class="metric-sub">este mes</div></div>
@@ -296,11 +290,9 @@ textarea{resize:vertical;min-height:80px;}
           </div>
         </div>
 
-        <!-- DESARROLLOS -->
-        <div class="section" id="sec-desarrollos"><div id="desarrollos-content"><div class="loading">Cargando...</div></div></div>
+        </div></div>
 
-        <!-- UNIDADES -->
-        <div class="section" id="sec-unidades"><div id="unidades-content"><div class="loading">Cargando...</div></div></div>
+        </div></div>
 
         <!-- CITAS -->
         <div class="section" id="sec-citas"><div id="citas-content"><div class="loading">Cargando...</div></div></div>
@@ -454,59 +446,7 @@ textarea{resize:vertical;min-height:80px;}
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
-<!-- MODAL DESARROLLO -->
 
-<div class="modal-overlay" id="modal-desarrollo" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title">Nuevo desarrollo</div><button class="modal-close" onclick="document.getElementById('modal-desarrollo').style.display='none'">×</button></div>
-    <div class="form-grid">
-      <div class="form-gi form-full"><label class="form-label">Nombre</label><input id="d-nombre" placeholder="Torres del Sol"></div>
-      <div class="form-gi form-full"><label class="form-label">Descripción</label><textarea id="d-desc"></textarea></div>
-      <div class="form-gi"><label class="form-label">Tipo</label><select id="d-tipo"><option>Residencial</option><option>Comercial</option><option>Mixto</option><option>Oficinas</option></select></div>
-      <div class="form-gi"><label class="form-label">Estado</label><select id="d-estado"><option value="en_pozo">En pozo</option><option value="en_construccion">En construcción</option><option value="terminado">Terminado</option><option value="entregado">Entregado</option></select></div>
-      <div class="form-gi form-full"><label class="form-label">Dirección</label><input id="d-dir"></div>
-      <div class="form-gi"><label class="form-label">Barrio</label><input id="d-barrio" placeholder="Palermo"></div>
-      <div class="form-gi"><label class="form-label">Ciudad</label><input id="d-ciudad" placeholder="CABA"></div>
-      <div class="form-gi"><label class="form-label">Precio desde (USD)</label><input id="d-pmin" type="number"></div>
-      <div class="form-gi"><label class="form-label">Precio hasta (USD)</label><input id="d-pmax" type="number"></div>
-      <div class="form-gi"><label class="form-label">Entrega</label><input id="d-entrega" placeholder="Q2 2026"></div>
-      <div class="form-gi form-full"><label class="form-label">Amenities (separados por coma)</label><input id="d-amenities" placeholder="Pileta, Gym, SUM, Cochera"></div>
-      <div class="form-gi form-full"><label class="form-label">URL imagen principal</label><input id="d-imagen"></div>
-      <div class="form-gi form-full"><label class="form-label">URL brochure PDF</label><input id="d-brochure"></div>
-      <div class="form-gi form-full"><label class="form-label">URL video</label><input id="d-video"></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn" onclick="document.getElementById('modal-desarrollo').style.display='none'">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveDesarrollo()"><i class="ti ti-device-floppy"></i> Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL UNIDAD -->
-<div class="modal-overlay" id="modal-unidad" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title">Nueva unidad</div><button class="modal-close" onclick="document.getElementById('modal-unidad').style.display='none'">×</button></div>
-    <div class="form-grid">
-      <div class="form-gi form-full"><label class="form-label">Desarrollo</label><select id="u-desarrollo"></select></div>
-      <div class="form-gi"><label class="form-label">Número / ID</label><input id="u-numero" placeholder="Piso 3 Dto A"></div>
-      <div class="form-gi"><label class="form-label">Tipo</label><select id="u-tipo"><option>Monoambiente</option><option>2 ambientes</option><option>3 ambientes</option><option>4 ambientes</option><option>PH</option><option>Local</option><option>Oficina</option></select></div>
-      <div class="form-gi"><label class="form-label">Superficie total (m²)</label><input id="u-stotal" type="number"></div>
-      <div class="form-gi"><label class="form-label">Superficie cubierta (m²)</label><input id="u-scub" type="number"></div>
-      <div class="form-gi"><label class="form-label">Dormitorios</label><input id="u-dorm" type="number"></div>
-      <div class="form-gi"><label class="form-label">Baños</label><input id="u-banos" type="number"></div>
-      <div class="form-gi"><label class="form-label">Cocheras</label><input id="u-coch" type="number"></div>
-      <div class="form-gi"><label class="form-label">Piso</label><input id="u-piso" type="number"></div>
-      <div class="form-gi"><label class="form-label">Orientación</label><select id="u-orient"><option>Norte</option><option>Sur</option><option>Este</option><option>Oeste</option><option>Frente</option><option>Contrafrente</option></select></div>
-      <div class="form-gi"><label class="form-label">Precio (USD)</label><input id="u-precio" type="number"></div>
-      <div class="form-gi"><label class="form-label">Expensas (ARS)</label><input id="u-exp" type="number"></div>
-      <div class="form-gi form-full"><label class="form-label">Disponibilidad</label><select id="u-disp"><option value="disponible">Disponible</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn" onclick="document.getElementById('modal-unidad').style.display='none'">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveUnidad()"><i class="ti ti-device-floppy"></i> Guardar</button>
-    </div>
-  </div>
-</div>
 
 <script>
 
@@ -698,9 +638,6 @@ async function loadDashboard() {
   const { data: met } = await sb.from('metricas_dashboard').select('*').eq('empresa_id', currentEmpresa.id).single();
   if (met) {
     document.getElementById('m-total').textContent     = met.leads_total || 0;
-    document.getElementById('m-calientes').textContent = met.leads_calientes || 0;
-    document.getElementById('m-tibios').textContent    = met.leads_tibios || 0;
-    document.getElementById('m-frios').textContent     = met.leads_frios || 0;
     document.getElementById('badge-leads').textContent = met.leads_total || 0;
     // Métricas extendidas
     if (document.getElementById('m-nuevos7d'))  document.getElementById('m-nuevos7d').textContent  = met.nuevos_7d  || 0;
@@ -719,7 +656,6 @@ async function loadDashboard() {
         <div style="font-size:13px;font-weight:500;color:var(--text)">${l.nombre||l.contacto}</div>
         <div style="font-size:11px;color:var(--text3)">${l.canal} · ${new Date(l.created_at).toLocaleDateString('es-AR')} · ${l.intencion||'sin intención'}</div>
       </div>
-      <span class="badge ${l.temperatura==='caliente'?'badge-red':l.temperatura==='tibio'?'badge-amber':'badge-blue'}">${l.temperatura||'—'}</span>
     </div>`).join('');
 }
 
@@ -729,12 +665,10 @@ async function loadLeads() {
   const { data } = await sb.from('leads').select('*').eq('empresa_id', currentEmpresa.id).order('created_at',{ascending:false});
   const el = document.getElementById('leads-content');
   if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-users"></i><p>No hay leads todavía.</p></div>'; return; }
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Contacto</th><th>Canal</th><th>Temperatura</th><th>Intención</th><th>Presupuesto</th><th>Fecha</th></tr></thead><tbody>${
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Contacto</th><th>Canal</th><th>Intención</th><th>Presupuesto</th><th>Fecha</th></tr></thead><tbody>${
     data.map(l=>`<tr>
       <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${(l.nombre||l.contacto||'?').substring(0,2).toUpperCase()}</div><div><div class="td-primary">${l.nombre||'—'}</div><div style="font-size:11px;color:var(--text3)">${l.contacto}</div></div></div></td>
-      <td><span class="badge badge-blue">${l.canal}</span></td>
-      <td><span class="badge ${l.temperatura==='caliente'?'badge-red':l.temperatura==='tibio'?'badge-amber':'badge-blue'}">${l.temperatura||'—'}</span></td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.intencion||'—'}</td>
+      <td><span class="badge badge-blue">${l.canal}</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.intencion||'—'}</td>
       <td>${l.presupuesto_max?'USD '+Number(l.presupuesto_max).toLocaleString():'—'}</td>
       <td>${new Date(l.created_at).toLocaleDateString('es-AR')}</td>
     </tr>`).join('')
@@ -752,7 +686,6 @@ async function loadConversaciones() {
       <div style="display:flex;align-items:center;gap:8px">
         <div class="avatar" style="width:26px;height:26px;font-size:9px">${(l.nombre||l.contacto||'?').substring(0,2).toUpperCase()}</div>
         <div class="chat-item-name" style="flex:1">${l.nombre||l.contacto}</div>
-        <span class="badge ${l.temperatura==='caliente'?'badge-red':l.temperatura==='tibio'?'badge-amber':'badge-blue'}" style="font-size:10px;padding:2px 6px">${l.temperatura||'?'}</span>
       </div>
       <div class="chat-item-preview">${l.intencion||'Sin intención detectada'}</div>
       <div class="chat-item-time">${l.canal} · ${new Date(l.updated_at||l.created_at).toLocaleDateString('es-AR')}</div>
@@ -787,80 +720,6 @@ async function toggleBot(leadId) {
   showToast(lead.bot_pausado ? 'Bot reactivado — el bot responde automaticamente' : 'Bot pausado — podés responder manualmente');
 }
 
-// ── DESARROLLOS ──────────────────────────────────────
-async function loadDesarrollos() {
-  if (!currentEmpresa) return;
-  document.getElementById('page-actions').innerHTML=`<button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-desarrollo').style.display='flex'"><i class="ti ti-plus"></i> Nuevo desarrollo</button>`;
-  const { data } = await sb.from('desarrollos').select('*').eq('empresa_id', currentEmpresa.id).order('created_at',{ascending:false});
-  const el = document.getElementById('desarrollos-content');
-  if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i><p>No hay desarrollos cargados.</p></div>'; return; }
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Barrio</th><th>Tipo</th><th>Estado</th><th>Precio desde</th><th>Entrega</th></tr></thead><tbody>${
-    data.map(d=>`<tr><td class="td-primary">${d.nombre}</td><td>${d.barrio||'—'}, ${d.ciudad||''}</td><td>${d.tipo||'—'}</td><td><span class="badge ${d.estado==='terminado'?'badge-green':d.estado==='en_construccion'?'badge-amber':'badge-blue'}">${d.estado||'—'}</span></td><td>${d.precio_desde?'USD '+Number(d.precio_desde).toLocaleString():'—'}</td><td>${d.entrega||'—'}</td></tr>`).join('')
-  }</tbody></table></div>`;
-}
-
-async function saveDesarrollo() {
-  if (!currentEmpresa) return;
-  const amenities = document.getElementById('d-amenities').value.split(',').map(a=>a.trim()).filter(Boolean);
-  const { error } = await sb.from('desarrollos').insert({
-    empresa_id: currentEmpresa.id,
-    nombre: document.getElementById('d-nombre').value,
-    descripcion: document.getElementById('d-desc').value,
-    tipo: document.getElementById('d-tipo').value,
-    estado: document.getElementById('d-estado').value,
-    direccion: document.getElementById('d-dir').value,
-    barrio: document.getElementById('d-barrio').value,
-    ciudad: document.getElementById('d-ciudad').value,
-    precio_desde: parseFloat(document.getElementById('d-pmin').value)||null,
-    precio_hasta: parseFloat(document.getElementById('d-pmax').value)||null,
-    entrega: document.getElementById('d-entrega').value,
-    amenities,
-    imagen_principal: document.getElementById('d-imagen').value,
-    brochure_url: document.getElementById('d-brochure').value,
-    video_url: document.getElementById('d-video').value,
-    activo: true
-  });
-  if (!error) { document.getElementById('modal-desarrollo').style.display='none'; loadDesarrollos(); showToast('Desarrollo guardado'); }
-  else showToast(error.message, 'error');
-}
-
-// ── UNIDADES ─────────────────────────────────────────
-async function loadUnidades() {
-  if (!currentEmpresa) return;
-  document.getElementById('page-actions').innerHTML=`<button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-unidad').style.display='flex'"><i class="ti ti-plus"></i> Nueva unidad</button>`;
-  const { data: devs } = await sb.from('desarrollos').select('id,nombre').eq('empresa_id', currentEmpresa.id);
-  const sel = document.getElementById('u-desarrollo');
-  sel.innerHTML = (devs||[]).map(d=>`<option value="${d.id}">${d.nombre}</option>`).join('');
-  if (!devs||devs.length===0) { document.getElementById('unidades-content').innerHTML='<div class="empty-state"><i class="ti ti-building"></i><p>Primero cargá un desarrollo.</p></div>'; return; }
-  const { data } = await sb.from('unidades').select('*, desarrollos(nombre)').in('desarrollo_id', devs.map(d=>d.id)).order('created_at',{ascending:false});
-  const el = document.getElementById('unidades-content');
-  if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-door"></i><p>No hay unidades cargadas.</p></div>'; return; }
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Unidad</th><th>Desarrollo</th><th>Tipo</th><th>Sup.</th><th>Dorm.</th><th>Precio</th><th>Estado</th></tr></thead><tbody>${
-    data.map(u=>`<tr><td class="td-primary">${u.numero||'—'}</td><td>${u.desarrollos?.nombre||'—'}</td><td>${u.tipo||'—'}</td><td>${u.superficie_total?u.superficie_total+' m²':'—'}</td><td>${u.dormitorios||'—'}</td><td>${u.precio?'USD '+Number(u.precio).toLocaleString():'—'}</td><td><span class="badge ${u.disponibilidad==='disponible'?'badge-green':u.disponibilidad==='reservado'?'badge-amber':'badge-red'}">${u.disponibilidad||'—'}</span></td></tr>`).join('')
-  }</tbody></table></div>`;
-}
-
-async function saveUnidad() {
-  const { error } = await sb.from('unidades').insert({
-    desarrollo_id: document.getElementById('u-desarrollo').value,
-    numero: document.getElementById('u-numero').value,
-    tipo: document.getElementById('u-tipo').value,
-    superficie_total: parseFloat(document.getElementById('u-stotal').value)||null,
-    superficie_cubierta: parseFloat(document.getElementById('u-scub').value)||null,
-    dormitorios: parseInt(document.getElementById('u-dorm').value)||null,
-    banos: parseInt(document.getElementById('u-banos').value)||null,
-    cocheras: parseInt(document.getElementById('u-coch').value)||0,
-    piso: parseInt(document.getElementById('u-piso').value)||null,
-    orientacion: document.getElementById('u-orient').value,
-    precio: parseFloat(document.getElementById('u-precio').value)||null,
-    expensas: parseFloat(document.getElementById('u-exp').value)||null,
-    disponibilidad: document.getElementById('u-disp').value,
-    activo: true
-  });
-  if (!error) { document.getElementById('modal-unidad').style.display='none'; loadUnidades(); showToast('Unidad guardada'); }
-  else showToast(error.message, 'error');
-}
-
 // ── CITAS ────────────────────────────────────────────
 async function loadCitas() {
   if (!currentEmpresa) return;
@@ -873,7 +732,7 @@ async function loadCitas() {
 }
 
 // ── NAVEGACIÓN ───────────────────────────────────────
-const pageTitles={dashboard:'Dashboard',leads:'Leads',conversaciones:'Conversaciones',citas:'Citas',desarrollos:'Desarrollos',unidades:'Unidades',empresa:'Mi empresa',bot:'Bot'};
+const pageTitles={dashboard:'Dashboard',leads:'Leads',conversaciones:'Conversaciones',citas:'Citas',empresa:'Mi empresa',bot:'Bot'};
 // ── WHATSAPP QR ───────────────────────────────────────
 const BAILEYS_URL = 'https://baileys-qr-production.up.railway.app';
 let qrPollInterval = null;
@@ -964,8 +823,6 @@ function showSection(id, el) {
   document.getElementById('page-actions').innerHTML = '';
   if(id==='leads') loadLeads();
   if(id==='conversaciones') loadConversaciones();
-  if(id==='desarrollos') loadDesarrollos();
-  if(id==='unidades') loadUnidades();
   if(id==='citas') loadCitas();
 }
 
