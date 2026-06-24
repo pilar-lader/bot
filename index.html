@@ -15,11 +15,18 @@
   --green:#00b894;--amber:#fdcb6e;--red:#e17055;--blue:#74b9ff;
   --radius:12px;--radius-sm:8px;
 }
+[data-theme="light"] {
+  --bg:#f0f0f5;--bg2:#ffffff;--bg3:#f5f5fa;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --text:#1a1a2e;--text2:#4a4a6a;--text3:#8888a8;
+  --accent:#6c5ce7;--accent2:#5a4bd4;
+  --green:#00976e;--amber:#c99a00;--red:#c0502e;--blue:#2980d4;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;font-size:14px;}
 
 /* AUTH */
-#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
 .auth-box{width:400px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:40px;}
 .auth-logo{text-align:center;margin-bottom:28px;}
 .auth-logo-icon{width:52px;height:52px;background:var(--accent);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px;}
@@ -223,6 +230,9 @@ textarea{resize:vertical;min-height:80px;}
     <div class="empresa-name" id="empresa-display">—</div>
     <div class="topnav-right">
       <span class="user-badge" id="user-email-display"></span>
+      <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar modo" style="background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 8px;color:var(--text3);cursor:pointer;font-size:14px;font-family:inherit;display:flex;align-items:center;">
+        <i class="ti ti-sun" id="icon-sun"></i><i class="ti ti-moon" id="icon-moon" style="display:none"></i>
+      </button>
       <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px"></i> Salir</button>
     </div>
   </div>
@@ -256,9 +266,9 @@ textarea{resize:vertical;min-height:80px;}
         <div class="section active" id="sec-dashboard">
           <div class="metrics">
             <div class="metric"><div class="metric-label">Leads totales</div><div class="metric-value" id="m-total" style="color:var(--accent2)">—</div><div class="metric-sub">en tu cuenta</div></div>
-            
-            
-            
+            <div class="metric"><div class="metric-label">Calientes 🔥</div><div class="metric-value" id="m-calientes" style="color:var(--red)">—</div><div class="metric-sub">listos para cerrar</div></div>
+            <div class="metric"><div class="metric-label">Tibios</div><div class="metric-value" id="m-tibios" style="color:var(--amber)">—</div><div class="metric-sub">en seguimiento</div></div>
+            <div class="metric"><div class="metric-label">Fríos</div><div class="metric-value" id="m-frios" style="color:var(--blue)">—</div><div class="metric-sub">inicio de contacto</div></div>
           </div>
           <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
             <div class="metric"><div class="metric-label">Nuevos (7 días)</div><div class="metric-value" id="m-nuevos7d" style="color:var(--green)">—</div><div class="metric-sub">esta semana</div></div>
@@ -342,6 +352,36 @@ textarea{resize:vertical;min-height:80px;}
                   <i class="ti ti-plug-x"></i> Desconectar
                 </button>
               </div>
+            </div>
+
+            <!-- Webchat -->
+            <div class="card" style="margin-bottom:0;opacity:.6;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                <div style="width:36px;height:36px;background:rgba(116,185,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                  <i class="ti ti-messages" style="font-size:18px;color:var(--blue)"></i>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;">Webchat</div>
+                  <div style="font-size:11px;color:var(--text3);">Próximamente</div>
+                </div>
+                <div class="badge" style="margin-left:auto;background:rgba(90,90,114,.15);color:var(--text3);">En desarrollo</div>
+              </div>
+              <p style="font-size:12px;color:var(--text3);">Widget de chat para tu sitio web.</p>
+            </div>
+
+            <!-- Instagram -->
+            <div class="card" style="margin-bottom:0;opacity:.6;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                <div style="width:36px;height:36px;background:rgba(225,112,85,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                  <i class="ti ti-brand-instagram" style="font-size:18px;color:var(--red)"></i>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;">Instagram</div>
+                  <div style="font-size:11px;color:var(--text3);">Próximamente</div>
+                </div>
+                <div class="badge" style="margin-left:auto;background:rgba(90,90,114,.15);color:var(--text3);">En desarrollo</div>
+              </div>
+              <p style="font-size:12px;color:var(--text3);">Respondé mensajes directos de Instagram.</p>
             </div>
 
           </div>
@@ -754,59 +794,9 @@ async function loadDesarrollos() {
   const { data } = await sb.from('desarrollos').select('*').eq('empresa_id', currentEmpresa.id).order('created_at',{ascending:false});
   const el = document.getElementById('desarrollos-content');
   if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i><p>No hay desarrollos cargados.</p></div>'; return; }
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Barrio</th><th>Tipo</th><th>Estado</th><th>Precio desde</th><th>Entrega</th><th></th></tr></thead><tbody>${
-    data.map(d=>`<tr><td class="td-primary">${d.nombre}</td><td>${d.barrio||'—'}, ${d.ciudad||''}</td><td>${d.tipo||'—'}</td><td><span class="badge ${d.estado==='terminado'?'badge-green':d.estado==='en_construccion'?'badge-amber':'badge-blue'}">${d.estado||'—'}</span></td><td>${d.precio_desde?'USD '+Number(d.precio_desde).toLocaleString():'—'}</td><td>${d.entrega||'—'}</td><td><button class="btn btn-sm" onclick="editDesarrollo('${d.id}')"><i class="ti ti-pencil"></i></button></td></tr>`).join('')
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Barrio</th><th>Tipo</th><th>Estado</th><th>Precio desde</th><th>Entrega</th></tr></thead><tbody>${
+    data.map(d=>`<tr><td class="td-primary">${d.nombre}</td><td>${d.barrio||'—'}, ${d.ciudad||''}</td><td>${d.tipo||'—'}</td><td><span class="badge ${d.estado==='terminado'?'badge-green':d.estado==='en_construccion'?'badge-amber':'badge-blue'}">${d.estado||'—'}</span></td><td>${d.precio_desde?'USD '+Number(d.precio_desde).toLocaleString():'—'}</td><td>${d.entrega||'—'}</td></tr>`).join('')
   }</tbody></table></div>`;
-}
-
-async function editDesarrollo(id) {
-  const { data: d } = await sb.from('desarrollos').select('*').eq('id', id).single();
-  if (!d) return;
-  document.getElementById('d-nombre').value    = d.nombre || '';
-  document.getElementById('d-desc').value      = d.descripcion || '';
-  document.getElementById('d-tipo').value      = d.tipo || 'Residencial';
-  document.getElementById('d-estado').value    = d.estado || 'en_pozo';
-  document.getElementById('d-dir').value       = d.direccion || '';
-  document.getElementById('d-barrio').value    = d.barrio || '';
-  document.getElementById('d-ciudad').value    = d.ciudad || '';
-  document.getElementById('d-pmin').value      = d.precio_desde || '';
-  document.getElementById('d-pmax').value      = d.precio_hasta || '';
-  document.getElementById('d-entrega').value   = d.entrega || '';
-  document.getElementById('d-amenities').value = d.amenities || '';
-  document.getElementById('d-imagen').value    = d.imagen_url || '';
-  document.getElementById('d-brochure').value  = d.brochure_url || '';
-  document.getElementById('d-video').value     = d.video_url || '';
-  // Cambiar modal a modo edición
-  document.querySelector('#modal-desarrollo .modal-title').textContent = 'Editar desarrollo';
-  const saveBtn = document.querySelector('#modal-desarrollo .btn-primary');
-  saveBtn.onclick = () => updateDesarrollo(id);
-  document.getElementById('modal-desarrollo').style.display = 'flex';
-}
-
-async function updateDesarrollo(id) {
-  const { error } = await sb.from('desarrollos').update({
-    nombre:       document.getElementById('d-nombre').value,
-    descripcion:  document.getElementById('d-desc').value,
-    tipo:         document.getElementById('d-tipo').value,
-    estado:       document.getElementById('d-estado').value,
-    direccion:    document.getElementById('d-dir').value,
-    barrio:       document.getElementById('d-barrio').value,
-    ciudad:       document.getElementById('d-ciudad').value,
-    precio_desde: document.getElementById('d-pmin').value || null,
-    precio_hasta: document.getElementById('d-pmax').value || null,
-    entrega:      document.getElementById('d-entrega').value,
-    amenities:    document.getElementById('d-amenities').value,
-    imagen_url:   document.getElementById('d-imagen').value,
-    brochure_url: document.getElementById('d-brochure').value,
-    video_url:    document.getElementById('d-video').value
-  }).eq('id', id);
-  if (error) { showToast('Error al actualizar', 'error'); return; }
-  showToast('Desarrollo actualizado', 'success');
-  document.getElementById('modal-desarrollo').style.display = 'none';
-  // Resetear modal a modo nuevo
-  document.querySelector('#modal-desarrollo .modal-title').textContent = 'Nuevo desarrollo';
-  document.querySelector('#modal-desarrollo .btn-primary').onclick = saveDesarrollo;
-  loadDesarrollos();
 }
 
 async function saveDesarrollo() {
@@ -845,55 +835,9 @@ async function loadUnidades() {
   const { data } = await sb.from('unidades').select('*, desarrollos(nombre)').in('desarrollo_id', devs.map(d=>d.id)).order('created_at',{ascending:false});
   const el = document.getElementById('unidades-content');
   if (!data||data.length===0) { el.innerHTML='<div class="empty-state"><i class="ti ti-door"></i><p>No hay unidades cargadas.</p></div>'; return; }
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Unidad</th><th>Desarrollo</th><th>Tipo</th><th>Sup.</th><th>Dorm.</th><th>Precio</th><th>Estado</th><th></th></tr></thead><tbody>${
-    data.map(u=>`<tr><td class="td-primary">${u.numero||'—'}</td><td>${u.desarrollos?.nombre||'—'}</td><td>${u.tipo||'—'}</td><td>${u.superficie_total?u.superficie_total+' m²':'—'}</td><td>${u.dormitorios||'—'}</td><td>${u.precio?'USD '+Number(u.precio).toLocaleString():'—'}</td><td><span class="badge ${u.disponibilidad==='disponible'?'badge-green':u.disponibilidad==='reservado'?'badge-amber':'badge-red'}">${u.disponibilidad||'—'}</span></td><td><button class="btn btn-sm" onclick="editUnidad('${u.id}')"><i class="ti ti-pencil"></i></button></td></tr>`).join('')
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Unidad</th><th>Desarrollo</th><th>Tipo</th><th>Sup.</th><th>Dorm.</th><th>Precio</th><th>Estado</th></tr></thead><tbody>${
+    data.map(u=>`<tr><td class="td-primary">${u.numero||'—'}</td><td>${u.desarrollos?.nombre||'—'}</td><td>${u.tipo||'—'}</td><td>${u.superficie_total?u.superficie_total+' m²':'—'}</td><td>${u.dormitorios||'—'}</td><td>${u.precio?'USD '+Number(u.precio).toLocaleString():'—'}</td><td><span class="badge ${u.disponibilidad==='disponible'?'badge-green':u.disponibilidad==='reservado'?'badge-amber':'badge-red'}">${u.disponibilidad||'—'}</span></td></tr>`).join('')
   }</tbody></table></div>`;
-}
-
-async function editUnidad(id) {
-  const { data: u } = await sb.from('unidades').select('*').eq('id', id).single();
-  if (!u) return;
-  document.getElementById('u-desarrollo').value  = u.desarrollo_id || '';
-  document.getElementById('u-numero').value      = u.numero || '';
-  document.getElementById('u-tipo').value        = u.tipo || 'Monoambiente';
-  document.getElementById('u-stotal').value      = u.superficie_total || '';
-  document.getElementById('u-scub').value        = u.superficie_cubierta || '';
-  document.getElementById('u-dorm').value        = u.dormitorios || '';
-  document.getElementById('u-banos').value       = u.banos || '';
-  document.getElementById('u-coch').value        = u.cocheras || '';
-  document.getElementById('u-piso').value        = u.piso || '';
-  document.getElementById('u-orient').value      = u.orientacion || 'Norte';
-  document.getElementById('u-precio').value      = u.precio || '';
-  document.getElementById('u-exp').value         = u.expensas || '';
-  document.getElementById('u-disp').value        = u.disponibilidad || 'disponible';
-  document.querySelector('#modal-unidad .modal-title').textContent = 'Editar unidad';
-  const saveBtn = document.querySelector('#modal-unidad .btn-primary');
-  saveBtn.onclick = () => updateUnidad(id);
-  document.getElementById('modal-unidad').style.display = 'flex';
-}
-
-async function updateUnidad(id) {
-  const { error } = await sb.from('unidades').update({
-    desarrollo_id:      document.getElementById('u-desarrollo').value,
-    numero:             document.getElementById('u-numero').value,
-    tipo:               document.getElementById('u-tipo').value,
-    superficie_total:   document.getElementById('u-stotal').value || null,
-    superficie_cubierta:document.getElementById('u-scub').value || null,
-    dormitorios:        document.getElementById('u-dorm').value || null,
-    banos:              document.getElementById('u-banos').value || null,
-    cocheras:           document.getElementById('u-coch').value || null,
-    piso:               document.getElementById('u-piso').value || null,
-    orientacion:        document.getElementById('u-orient').value,
-    precio:             document.getElementById('u-precio').value || null,
-    expensas:           document.getElementById('u-exp').value || null,
-    disponibilidad:     document.getElementById('u-disp').value
-  }).eq('id', id);
-  if (error) { showToast('Error al actualizar', 'error'); return; }
-  showToast('Unidad actualizada', 'success');
-  document.getElementById('modal-unidad').style.display = 'none';
-  document.querySelector('#modal-unidad .modal-title').textContent = 'Nueva unidad';
-  document.querySelector('#modal-unidad .btn-primary').onclick = saveUnidad;
-  loadUnidades();
 }
 
 async function saveUnidad() {
@@ -1058,6 +1002,26 @@ async function enviarManual() {
     descripcion: 'Mensaje manual enviado: ' + texto.substring(0, 100)
   });
 }
+
+// ── TEMA CLARO / OSCURO ───────────────────────────────
+const THEME_KEY = 'prometeo-theme';
+function applyTheme(light) {
+  document.documentElement.setAttribute('data-theme', light ? 'light' : '');
+  document.getElementById('icon-sun').style.display  = light ? 'none' : '';
+  document.getElementById('icon-moon').style.display = light ? ''     : 'none';
+  document.getElementById('theme-toggle').title = light ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro';
+}
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const next = !isLight;
+  localStorage.setItem(THEME_KEY, next ? 'light' : 'dark');
+  applyTheme(next);
+}
+(function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  const preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved === 'light' || (!saved && preferLight));
+})();
 
 // ── ENVÍO MANUAL ─────────────────────────────────────
 document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
