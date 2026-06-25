@@ -155,11 +155,60 @@ textarea{resize:vertical;min-height:80px;}
 .toast.success{border-left:3px solid var(--green);}
 .toast.error{border-left:3px solid var(--red);}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ORG SELECTOR ─────────────────────────────────── */
+#org-screen{min-height:100vh;background:var(--bg);display:flex;flex-direction:column;}
+.org-header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);}
+.org-header-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:var(--text);}
+.org-header-logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.org-body{flex:1;padding:40px;}
+.org-title{font-size:28px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.org-sub{font-size:14px;color:var(--text2);margin-bottom:28px;}
+.org-search{width:100%;max-width:600px;padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-size:14px;margin-bottom:28px;box-sizing:border-box;}
+.org-search:focus{outline:none;border-color:var(--accent);}
+.org-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.org-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+.org-card:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,92,231,.12);}
+.org-card-top{height:110px;background:var(--bg3);display:flex;align-items:center;justify-content:center;position:relative;}
+.org-card-clone{position:absolute;top:10px;right:10px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s;}
+.org-card:hover .org-card-clone{opacity:1;}
+.org-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white;}
+.org-card-body{padding:14px 16px 0;}
+.org-card-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.org-card-plan{font-size:12px;color:var(--text3);margin-bottom:14px;}
+.org-card-btn{display:block;width:100%;padding:10px;background:rgba(108,92,231,.1);color:var(--accent);border:none;border-radius:0 0 var(--radius) var(--radius);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:background .15s;}
+.org-card:hover .org-card-btn{background:rgba(108,92,231,.2);}
+.org-empty{color:var(--text3);font-size:14px;padding:40px 0;}
+.super-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:rgba(108,92,231,.15);color:var(--accent2);border-radius:20px;padding:3px 10px;font-weight:600;}
+
 </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
+
+<!-- ORG SELECTOR (super admin) -->
+<div id="org-screen" style="display:none">
+  <div class="org-header">
+    <div class="org-header-logo">
+      <div class="org-header-logo-icon"><i class="ti ti-bolt" style="color:white;font-size:14px"></i></div>
+      Prometeo CRM
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="super-badge"><i class="ti ti-shield-check"></i> Super Admin</span>
+      <button onclick="doLogout()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;"><i class="ti ti-logout"></i> Cerrar sesión</button>
+    </div>
+  </div>
+  <div class="org-body">
+    <div class="org-title" id="org-welcome">Bienvenido</div>
+    <div class="org-sub">Seleccioná la organización a la que querés acceder</div>
+    <input class="org-search" id="org-search" placeholder="Buscar por nombre..." oninput="filterOrgs(this.value)">
+    <div class="org-grid" id="org-grid">
+      <div class="org-empty">Cargando organizaciones...</div>
+    </div>
+  </div>
+</div>
+
 
 <!-- AUTH -->
 <div id="auth-screen">
@@ -228,6 +277,7 @@ textarea{resize:vertical;min-height:80px;}
     </div>
     <div class="topnav-sep"></div>
     <div class="empresa-name" id="empresa-display">—</div>
+    <button id="btn-volver-orgs" onclick="volverOrgs()" style="display:none;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:4px 10px;color:var(--text2);cursor:pointer;font-size:12px;display:none;align-items:center;gap:5px;"><i class="ti ti-arrow-left"></i> Organizaciones</button>
     <div class="topnav-right">
       <span class="user-badge" id="user-email-display"></span>
       <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar modo" style="background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 9px;color:var(--text2);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;"><i class="ti ti-moon" id="icon-moon"></i><i class="ti ti-sun" id="icon-sun" style="display:none"></i></button>
@@ -340,20 +390,6 @@ textarea{resize:vertical;min-height:80px;}
               </div>
             </div>
 
-            <!-- Webchat -->
-            <div class="card" style="margin-bottom:0;opacity:.6;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <div style="width:36px;height:36px;background:rgba(116,185,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                  <i class="ti ti-messages" style="font-size:18px;color:var(--blue)"></i>
-                </div>
-                <div>
-                  <div style="font-size:13px;font-weight:600;">Webchat</div>
-                  <div style="font-size:11px;color:var(--text3);">Próximamente</div>
-                </div>
-                <div class="badge" style="margin-left:auto;background:rgba(90,90,114,.15);color:var(--text3);">En desarrollo</div>
-              </div>
-              <p style="font-size:12px;color:var(--text3);">Widget de chat para tu sitio web.</p>
-            </div>
 
             <!-- Instagram -->
             <div class="card" style="margin-bottom:0;opacity:.6;">
@@ -376,10 +412,8 @@ textarea{resize:vertical;min-height:80px;}
         <!-- BOT -->
         <div class="section" id="sec-bot">
           <div class="card">
-            <div class="card-title">Configuración del bot de Telegram</div>
+            <div class="card-title">Configuración del bot</div>
             <div class="form-grid">
-              <div class="form-gi form-full"><label class="form-label">Token de Telegram (BotFather)</label><input id="bot-token" type="password" placeholder="7234567890:AAFxxxxxxx"></div>
-              <div class="form-gi form-full"><label class="form-label">Username del bot</label><input id="bot-username" placeholder="@miempresa_bot"></div>
               <div class="form-gi form-full"><label class="form-label">Mensaje de bienvenida</label><textarea id="bot-saludo" placeholder="¡Hola! Soy el asistente de [EMPRESA]..."></textarea></div>
               <div class="form-gi form-full"><label class="form-label">Prompt del sistema</label><textarea id="bot-prompt" style="min-height:140px" placeholder="Sos el asistente de ventas de [EMPRESA]..."></textarea></div>
               <div class="form-gi form-full" style="display:flex;align-items:center;gap:12px">
@@ -485,6 +519,14 @@ function hideMessages() {
   document.getElementById('auth-success').style.display = 'none';
 }
 
+// ── ROLES ────────────────────────────────────────────
+const SUPER_ADMIN_EMAILS = []; // se completa desde la tabla perfiles con role='super_admin'
+
+async function isSuperAdmin(userId) {
+  const { data } = await sb.from('perfiles').select('role').eq('id', userId).single();
+  return data?.role === 'super_admin';
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
@@ -503,8 +545,13 @@ async function doLogin() {
   }
   currentUser = data.user;
   document.getElementById('user-email-display').textContent = email;
-  await loadEmpresa();
-  showApp();
+  const superAdmin = await isSuperAdmin(currentUser.id);
+  if (superAdmin) {
+    showOrgSelector();
+  } else {
+    await loadEmpresa();
+    showApp();
+  }
 }
 
 async function doRegister() {
@@ -551,7 +598,8 @@ async function doRegister() {
 
 async function doLogout() {
   await sb.auth.signOut();
-  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'none';
+  document.getElementById('org-screen').style.display  = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
   currentUser = null; currentEmpresa = null;
 }
@@ -561,15 +609,25 @@ async function checkSession() {
   if (session) {
     currentUser = session.user;
     document.getElementById('user-email-display').textContent = session.user.email;
-    await loadEmpresa();
-    showApp();
+    const superAdmin = await isSuperAdmin(currentUser.id);
+    if (superAdmin) {
+      showOrgSelector();
+    } else {
+      await loadEmpresa();
+      showApp();
+    }
   }
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('org-screen').style.display  = 'none';
   const app = document.getElementById('app-screen');
   app.style.display = 'flex';
+  // mostrar botón volver si es super admin
+  const sa = await isSuperAdmin(currentUser.id);
+  const btnVolver = document.getElementById('btn-volver-orgs');
+  if (btnVolver) btnVolver.style.display = sa ? 'flex' : 'none';
   loadDashboard();
   checkWspStatus();
 }
@@ -588,8 +646,6 @@ async function loadEmpresa() {
   document.getElementById('emp-ciudad').value   = emp.ciudad||'';
   document.getElementById('emp-pais').value     = emp.pais||'';
   document.getElementById('emp-web').value      = emp.sitio_web||'';
-  document.getElementById('bot-token').value    = emp.bot_token||'';
-  document.getElementById('bot-username').value = emp.bot_username||'';
   document.getElementById('bot-prompt').value   = emp.prompt_sistema||'';
   document.getElementById('bot-saludo').value   = emp.prompt_saludo||'';
   if (!emp.bot_activo) document.getElementById('bot-toggle').classList.remove('on');
@@ -613,8 +669,6 @@ async function saveEmpresa() {
 async function saveBot() {
   if (!currentEmpresa) return;
   await sb.from('empresas').update({
-    bot_token: document.getElementById('bot-token').value,
-    bot_username: document.getElementById('bot-username').value,
     prompt_sistema: document.getElementById('bot-prompt').value,
     prompt_saludo: document.getElementById('bot-saludo').value,
     bot_activo: document.getElementById('bot-toggle').classList.contains('on'),
@@ -833,7 +887,7 @@ async function enviarManual() {
   // Guardar en BD
   const { error } = await sb.from('mensajes').insert({
     lead_id:   activeChatLeadId,
-    canal:     'telegram',
+    canal:     'whatsapp',
     direccion: 'saliente',
     contenido: texto
   });
@@ -856,6 +910,94 @@ async function enviarManual() {
   });
 }
 
+
+
+// ── ORG SELECTOR ─────────────────────────────────────
+let allOrgs = [];
+
+function avatarColor(name) {
+  const colors = ['#6c5ce7','#00b894','#e17055','#0984e3','#fd79a8','#fdcb6e','#00cec9','#a29bfe'];
+  let hash = 0;
+  for (let c of name) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function avatarInitials(name) {
+  return name.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+async function showOrgSelector() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'none';
+  document.getElementById('org-screen').style.display  = 'flex';
+  document.getElementById('org-welcome').textContent   = 'Bienvenido ' + (currentUser.email.split('@')[0]);
+  await loadOrgs();
+}
+
+async function loadOrgs() {
+  const { data, error } = await sb.from('empresas').select('id,nombre,logo_url,plan').order('nombre');
+  if (error || !data) return;
+  allOrgs = data;
+  renderOrgs(allOrgs);
+}
+
+function renderOrgs(orgs) {
+  const grid = document.getElementById('org-grid');
+  if (!orgs.length) {
+    grid.innerHTML = '<div class="org-empty">No se encontraron organizaciones.</div>';
+    return;
+  }
+  grid.innerHTML = orgs.map(org => {
+    const color = avatarColor(org.nombre);
+    const initials = avatarInitials(org.nombre);
+    const avatar = org.logo_url
+      ? `<img src="${org.logo_url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;">`
+      : `<div class="org-avatar" style="background:${color}">${initials}</div>`;
+    return `
+    <div class="org-card" onclick="selectOrg('${org.id}')">
+      <div class="org-card-top">
+        ${avatar}
+        <span class="org-card-clone"><i class="ti ti-copy"></i> Clonar</span>
+      </div>
+      <div class="org-card-body">
+        <div class="org-card-name">${org.nombre}</div>
+        <div class="org-card-plan">Plan ${org.plan || 'premium'}</div>
+      </div>
+      <button class="org-card-btn">Seleccionar</button>
+    </div>`;
+  }).join('');
+}
+
+function filterOrgs(q) {
+  const filtered = allOrgs.filter(o => o.nombre.toLowerCase().includes(q.toLowerCase()));
+  renderOrgs(filtered);
+}
+
+async function selectOrg(empresaId) {
+  const { data: emp } = await sb.from('empresas').select('*').eq('id', empresaId).single();
+  if (!emp) return;
+  currentEmpresa = emp;
+  document.getElementById('org-screen').style.display = 'none';
+  document.getElementById('empresa-display').textContent = emp.nombre;
+  // poblar campos empresa y bot
+  document.getElementById('emp-nombre').value   = emp.nombre||'';
+  document.getElementById('emp-email').value    = emp.email_contacto||'';
+  document.getElementById('emp-telefono').value = emp.telefono||'';
+  document.getElementById('emp-ciudad').value   = emp.ciudad||'';
+  document.getElementById('emp-pais').value     = emp.pais||'';
+  document.getElementById('emp-web').value      = emp.sitio_web||'';
+  document.getElementById('bot-prompt').value   = emp.prompt_sistema||'';
+  document.getElementById('bot-saludo').value   = emp.prompt_saludo||'';
+  if (!emp.bot_activo) document.getElementById('bot-toggle').classList.remove('on');
+  showApp();
+}
+
+// Botón "Volver a organizaciones" (solo visible para super admin)
+async function volverOrgs() {
+  document.getElementById('app-screen').style.display = 'none';
+  currentEmpresa = null;
+  await showOrgSelector();
+}
 
 // ── TEMA CLARO / OSCURO ──────────────────────────────
 const THEME_KEY = 'prometeo-theme';
