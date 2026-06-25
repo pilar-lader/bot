@@ -179,6 +179,8 @@ textarea{resize:vertical;min-height:80px;}
 .org-card-btn{display:block;width:100%;padding:10px;background:rgba(108,92,231,.1);color:var(--accent);border:none;border-radius:0 0 var(--radius) var(--radius);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:background .15s;}
 .org-card:hover .org-card-btn{background:rgba(108,92,231,.2);}
 .org-empty{color:var(--text3);font-size:14px;padding:40px 0;}
+.org-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+
 .super-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:rgba(108,92,231,.15);color:var(--accent2);border-radius:20px;padding:3px 10px;font-weight:600;}
 
 </style>
@@ -196,15 +198,65 @@ textarea{resize:vertical;min-height:80px;}
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="super-badge"><i class="ti ti-shield-check"></i> Super Admin</span>
+      <button onclick="toggleTheme()" title="Cambiar modo" style="background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 9px;color:var(--text2);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;"><i class="ti ti-moon" id="icon-moon2"></i><i class="ti ti-sun" id="icon-sun2" style="display:none"></i></button>
       <button onclick="doLogout()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;"><i class="ti ti-logout"></i> Cerrar sesión</button>
     </div>
   </div>
   <div class="org-body">
     <div class="org-title" id="org-welcome">Bienvenido</div>
     <div class="org-sub">Seleccioná la organización a la que querés acceder</div>
-    <input class="org-search" id="org-search" placeholder="Buscar por nombre..." oninput="filterOrgs(this.value)">
+    <div class="org-topbar">
+      <input class="org-search" id="org-search" placeholder="Buscar por nombre..." oninput="filterOrgs(this.value)" style="margin-bottom:0;flex:1;max-width:480px;">
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal-nueva-org').style.display='flex'" style="white-space:nowrap;">
+        <i class="ti ti-plus"></i> Nueva organización
+      </button>
+    </div>
     <div class="org-grid" id="org-grid">
       <div class="org-empty">Cargando organizaciones...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA ORG -->
+<div class="modal-overlay" id="modal-nueva-org" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Nueva organización</div>
+      <button class="modal-close" onclick="document.getElementById('modal-nueva-org').style.display='none'">×</button>
+    </div>
+    <div id="nueva-org-error" class="msg-box msg-error" style="margin-bottom:12px;"></div>
+    <div class="form-grid">
+      <div class="form-gi form-full">
+        <label class="form-label">Nombre de la empresa</label>
+        <input id="no-empresa" placeholder="Inmobiliaria XYZ">
+      </div>
+      <div class="form-gi form-full">
+        <label class="form-label">Email del administrador</label>
+        <input id="no-email" type="email" placeholder="admin@empresa.com">
+      </div>
+      <div class="form-gi">
+        <label class="form-label">Contraseña</label>
+        <input id="no-pass" type="password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-gi">
+        <label class="form-label">Repetir contraseña</label>
+        <input id="no-pass2" type="password" placeholder="Repetir">
+      </div>
+      <div class="form-gi form-full">
+        <label class="form-label">Plan</label>
+        <select id="no-plan">
+          <option value="premium">Premium</option>
+          <option value="basic">Basic</option>
+          <option value="enterprise">Enterprise</option>
+          <option value="free">Free</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="document.getElementById('modal-nueva-org').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" id="btn-crear-org" onclick="crearOrg()">
+        <i class="ti ti-plus"></i> Crear organización
+      </button>
     </div>
   </div>
 </div>
@@ -999,13 +1051,99 @@ async function volverOrgs() {
   await showOrgSelector();
 }
 
+
+// ── CREAR ORGANIZACIÓN (super admin) ─────────────────────
+async function crearOrg() {
+  const empresa = document.getElementById('no-empresa').value.trim();
+  const email   = document.getElementById('no-email').value.trim();
+  const pass    = document.getElementById('no-pass').value;
+  const pass2   = document.getElementById('no-pass2').value;
+  const plan    = document.getElementById('no-plan').value;
+  const errBox  = document.getElementById('nueva-org-error');
+  const btn     = document.getElementById('btn-crear-org');
+
+  errBox.style.display = 'none';
+
+  if (!empresa || !email || !pass || !pass2) {
+    errBox.textContent = 'Completá todos los campos'; errBox.style.display='block'; return;
+  }
+  if (pass !== pass2) {
+    errBox.textContent = 'Las contraseñas no coinciden'; errBox.style.display='block'; return;
+  }
+  if (pass.length < 6) {
+    errBox.textContent = 'La contraseña debe tener al menos 6 caracteres'; errBox.style.display='block'; return;
+  }
+
+  btn.innerHTML = '<i class="ti ti-loader"></i> Creando...';
+  btn.disabled = true;
+
+  // Crear usuario en Supabase Auth (admin API via service role no está disponible en frontend)
+  // Usamos signUp — el nuevo usuario queda pendiente de confirmación
+  // Para evitar cerrar sesión del super admin, usamos una instancia separada
+  const sbAnon = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data: newUser, error: authErr } = await sbAnon.auth.signUp({ email, password: pass });
+
+  if (authErr) {
+    errBox.textContent = 'Error al crear usuario: ' + authErr.message;
+    errBox.style.display = 'block';
+    btn.innerHTML = '<i class="ti ti-plus"></i> Crear organización';
+    btn.disabled = false;
+    return;
+  }
+
+  if (!newUser?.user) {
+    errBox.textContent = 'No se pudo crear el usuario. ¿El email ya existe?';
+    errBox.style.display = 'block';
+    btn.innerHTML = '<i class="ti ti-plus"></i> Crear organización';
+    btn.disabled = false;
+    return;
+  }
+
+  // Crear cuenta y empresa via RPC (igual que el registro normal)
+  const { error: rpcErr } = await sbAnon.rpc('crear_cuenta_empresa', {
+    p_user_id: newUser.user.id,
+    p_email:   email,
+    p_empresa: empresa
+  });
+
+  if (rpcErr) {
+    errBox.textContent = 'Error al crear empresa: ' + rpcErr.message;
+    errBox.style.display = 'block';
+    btn.innerHTML = '<i class="ti ti-plus"></i> Crear organización';
+    btn.disabled = false;
+    return;
+  }
+
+  // Actualizar plan si no es premium
+  if (plan !== 'premium') {
+    const { data: empNueva } = await sb.from('empresas').select('id').eq('nombre', empresa).single();
+    if (empNueva) await sb.from('empresas').update({ plan }).eq('id', empNueva.id);
+  }
+
+  // Limpiar y cerrar modal
+  ['no-empresa','no-email','no-pass','no-pass2'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('no-plan').value = 'premium';
+  document.getElementById('modal-nueva-org').style.display = 'none';
+  btn.innerHTML = '<i class="ti ti-plus"></i> Crear organización';
+  btn.disabled = false;
+
+  showToast('Organización "' + empresa + '" creada correctamente');
+  await loadOrgs(); // refrescar grid
+}
+
 // ── TEMA CLARO / OSCURO ──────────────────────────────
 const THEME_KEY = 'prometeo-theme';
 function applyTheme(light) {
   document.documentElement.setAttribute('data-theme', light ? 'light' : '');
-  document.getElementById('icon-moon').style.display = light ? 'none' : '';
-  document.getElementById('icon-sun').style.display  = light ? ''     : 'none';
+  // topnav icons
+  document.getElementById('icon-moon').style.display  = light ? 'none' : '';
+  document.getElementById('icon-sun').style.display   = light ? ''     : 'none';
   document.getElementById('theme-toggle').title = light ? 'Modo oscuro' : 'Modo claro';
+  // org-screen icons
+  const m2 = document.getElementById('icon-moon2');
+  const s2 = document.getElementById('icon-sun2');
+  if (m2) m2.style.display = light ? 'none' : '';
+  if (s2) s2.style.display = light ? ''     : 'none';
 }
 function toggleTheme() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
