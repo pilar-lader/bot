@@ -179,6 +179,25 @@ textarea{resize:vertical;min-height:80px;}
 .org-card-btn{display:block;width:100%;padding:10px;background:rgba(108,92,231,.1);color:var(--accent);border:none;border-radius:0 0 var(--radius) var(--radius);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:background .15s;}
 .org-card:hover .org-card-btn{background:rgba(108,92,231,.2);}
 .org-empty{color:var(--text3);font-size:14px;padding:40px 0;}
+/* ── SMART TAGS ───────────────────────────────────────── */
+.tags-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.tag-item{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.tag-item-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;}
+.tag-item-header:hover{background:var(--bg3);}
+.tag-pill{padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;color:white;}
+.tag-item-chevron{margin-left:auto;color:var(--text3);font-size:16px;transition:transform .2s;}
+.tag-item.open .tag-item-chevron{transform:rotate(180deg);}
+.tag-item-body{display:none;padding:0 14px 14px;}
+.tag-item.open .tag-item-body{display:block;}
+.tag-item-body textarea{width:100%;min-height:100px;resize:vertical;font-size:13px;line-height:1.6;box-sizing:border-box;}
+.tag-item-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.tag-fixed-badge{font-size:10px;color:var(--text3);background:var(--bg3);border-radius:20px;padding:2px 8px;}
+.color-picker-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
+.color-swatch.selected{border-color:var(--text);}
+.tag-add-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:1.5px dashed var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:13px;cursor:pointer;transition:border-color .15s,color .15s;}
+.tag-add-btn:hover{border-color:var(--accent);color:var(--accent);}
+
 .org-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
 
 .super-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:rgba(108,92,231,.15);color:var(--accent2);border-radius:20px;padding:3px 10px;font-weight:600;}
@@ -463,7 +482,9 @@ textarea{resize:vertical;min-height:80px;}
 
         <!-- BOT -->
         <div class="section" id="sec-bot">
-          <div class="card">
+
+          <!-- Configuración general -->
+          <div class="card" style="margin-bottom:16px">
             <div class="card-title">Configuración del bot</div>
             <div class="form-grid">
               <div class="form-gi form-full"><label class="form-label">Mensaje de bienvenida</label><textarea id="bot-saludo" placeholder="¡Hola! Soy el asistente de [EMPRESA]..."></textarea></div>
@@ -474,6 +495,48 @@ textarea{resize:vertical;min-height:80px;}
               </div>
             </div>
             <div class="form-actions"><button class="btn btn-primary" onclick="saveBot()"><i class="ti ti-device-floppy"></i> Guardar configuración</button></div>
+          </div>
+
+          <!-- Smart Tags -->
+          <div class="card">
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;">
+              <i class="ti ti-tag" style="font-size:20px;color:var(--accent);margin-top:2px"></i>
+              <div>
+                <div class="card-title" style="margin-bottom:2px">Smart Tags</div>
+                <div style="font-size:12px;color:var(--text3);line-height:1.5">Los tags le indican al bot cuándo clasificar un lead en cada categoría. La descripción se inyecta en el prompt automáticamente.</div>
+              </div>
+            </div>
+            <div class="tags-list" id="tags-list"></div>
+            <div class="tag-add-btn" onclick="abrirModalNuevoTag()">
+              <i class="ti ti-plus"></i> Crear nueva smart tag
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MODAL NUEVO/EDITAR TAG -->
+        <div class="modal-overlay" id="modal-tag" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+          <div class="modal" style="max-width:440px">
+            <div class="modal-header">
+              <div class="modal-title" id="modal-tag-title">Nueva smart tag</div>
+              <button class="modal-close" onclick="cerrarModalTag()">×</button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nombre de la etiqueta</label>
+              <input id="tag-nombre" placeholder="Ej: En negociación">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <div class="color-picker-row" id="color-picker-row"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Cuándo debe aplicar esta etiqueta?</label>
+              <textarea id="tag-descripcion" style="min-height:110px" placeholder="Describí la situación o contexto en que el bot debe asignar esta etiqueta al lead..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn" onclick="cerrarModalTag()">Cancelar</button>
+              <button class="btn btn-primary" onclick="guardarTag()"><i class="ti ti-device-floppy"></i> Guardar</button>
+            </div>
           </div>
         </div>
 
@@ -926,6 +989,7 @@ function showSection(id, el) {
   if(id==='leads') loadLeads();
   if(id==='conversaciones') loadConversaciones();
   if(id==='citas') loadCitas();
+  if(id==='bot') loadTagsConfig().then(loadTags);
 }
 
 // ── ENVÍO MANUAL ─────────────────────────────────────
@@ -1129,6 +1193,156 @@ async function crearOrg() {
 
   showToast('Organización "' + empresa + '" creada correctamente');
   await loadOrgs(); // refrescar grid
+}
+
+
+// ── SMART TAGS ────────────────────────────────────────
+const TAG_COLORS = ['#6c5ce7','#00b894','#e17055','#0984e3','#fd79a8','#fdcb6e','#00cec9','#a29bfe','#636e72','#d63031'];
+
+const DEFAULT_TAGS = [
+  {
+    id: 'oportunidad',
+    nombre: 'Oportunidad',
+    color: '#00b894',
+    fija: true,
+    descripcion: 'Asigná esta etiqueta únicamente si el lead confirma expresamente que quiere coordinar una visita presencial, una reunión, una llamada o una videollamada para conocer el desarrollo. No la uses si la persona está haciendo preguntas o recibiendo información. Esperá a que confirme que quiere avanzar en un contacto concreto.'
+  },
+  {
+    id: 'perdido',
+    nombre: 'Perdido',
+    color: '#e17055',
+    fija: true,
+    descripcion: 'Asigná esta etiqueta si el lead indica claramente que no está interesado, que ya compró en otro lado, que el presupuesto no le cierra o que no quiere continuar la conversación.'
+  }
+];
+
+let smartTags = [];
+let editingTagId = null;
+let selectedColor = TAG_COLORS[0];
+
+async function loadTags() {
+  if (!currentEmpresa) return;
+  const { data } = await sb.from('smart_tags')
+    .select('*')
+    .eq('empresa_id', currentEmpresa.id)
+    .order('created_at');
+
+  // Combinar fijas (siempre primero) con las custom
+  const custom = (data || []).map(t => ({ ...t, fija: false }));
+  smartTags = [...DEFAULT_TAGS, ...custom];
+  renderTags();
+}
+
+function renderTags() {
+  const list = document.getElementById('tags-list');
+  if (!list) return;
+  list.innerHTML = smartTags.map(tag => `
+    <div class="tag-item" id="tag-item-${tag.id}">
+      <div class="tag-item-header" onclick="toggleTag('${tag.id}')">
+        <span class="tag-pill" style="background:${tag.color}">${tag.nombre}</span>
+        ${tag.fija ? '<span class="tag-fixed-badge">Por defecto</span>' : ''}
+        <i class="ti ti-chevron-down tag-item-chevron"></i>
+      </div>
+      <div class="tag-item-body">
+        <textarea id="tag-desc-${tag.id}" placeholder="Describí cuándo el bot debe usar esta etiqueta...">${tag.descripcion || ''}</textarea>
+        <div class="tag-item-actions">
+          <button class="btn btn-sm btn-primary" onclick="saveTagDesc('${tag.id}')">
+            <i class="ti ti-device-floppy"></i> Guardar
+          </button>
+          ${!tag.fija ? `<button class="btn btn-sm" style="color:var(--red);border-color:var(--red)" onclick="eliminarTag('${tag.id}')"><i class="ti ti-trash"></i> Eliminar</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleTag(id) {
+  const el = document.getElementById('tag-item-' + id);
+  el.classList.toggle('open');
+}
+
+async function saveTagDesc(id) {
+  const tag = smartTags.find(t => t.id === id);
+  if (!tag) return;
+  const desc = document.getElementById('tag-desc-' + id).value;
+
+  if (tag.fija) {
+    // Las fijas se guardan en empresas.smart_tags_config (JSON)
+    const config = smartTags.reduce((acc, t) => {
+      acc[t.id] = { descripcion: document.getElementById('tag-desc-' + t.id)?.value || t.descripcion };
+      return acc;
+    }, {});
+    await sb.from('empresas').update({ smart_tags_config: config }).eq('id', currentEmpresa.id);
+  } else {
+    await sb.from('smart_tags').update({ descripcion: desc }).eq('id', id);
+  }
+  tag.descripcion = desc;
+  showToast('Etiqueta guardada');
+}
+
+async function eliminarTag(id) {
+  if (!confirm('¿Eliminar esta etiqueta?')) return;
+  await sb.from('smart_tags').delete().eq('id', id);
+  smartTags = smartTags.filter(t => t.id !== id);
+  renderTags();
+  showToast('Etiqueta eliminada');
+}
+
+function abrirModalNuevoTag() {
+  editingTagId = null;
+  selectedColor = TAG_COLORS[0];
+  document.getElementById('modal-tag-title').textContent = 'Nueva smart tag';
+  document.getElementById('tag-nombre').value = '';
+  document.getElementById('tag-descripcion').value = '';
+  renderColorPicker();
+  document.getElementById('modal-tag').style.display = 'flex';
+}
+
+function cerrarModalTag() {
+  document.getElementById('modal-tag').style.display = 'none';
+}
+
+function renderColorPicker() {
+  const row = document.getElementById('color-picker-row');
+  row.innerHTML = TAG_COLORS.map(c => `
+    <div class="color-swatch ${c === selectedColor ? 'selected' : ''}"
+      style="background:${c}"
+      onclick="selectColor('${c}')"></div>
+  `).join('');
+}
+
+function selectColor(color) {
+  selectedColor = color;
+  renderColorPicker();
+}
+
+async function guardarTag() {
+  const nombre = document.getElementById('tag-nombre').value.trim();
+  const descripcion = document.getElementById('tag-descripcion').value.trim();
+  if (!nombre) { showToast('Ingresá un nombre para la etiqueta', 'error'); return; }
+
+  const { data, error } = await sb.from('smart_tags').insert({
+    empresa_id: currentEmpresa.id,
+    nombre,
+    color: selectedColor,
+    descripcion
+  }).select().single();
+
+  if (error) { showToast('Error al guardar', 'error'); return; }
+
+  smartTags.push({ ...data, fija: false });
+  renderTags();
+  cerrarModalTag();
+  showToast('Etiqueta creada');
+}
+
+// Cargar descripciones personalizadas de tags fijas desde empresas.smart_tags_config
+async function loadTagsConfig() {
+  if (!currentEmpresa?.smart_tags_config) return;
+  const config = currentEmpresa.smart_tags_config;
+  DEFAULT_TAGS.forEach(t => {
+    if (config[t.id]?.descripcion) t.descripcion = config[t.id].descripcion;
+  });
 }
 
 // ── TEMA CLARO / OSCURO ──────────────────────────────
